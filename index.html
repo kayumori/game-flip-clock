@@ -233,23 +233,14 @@
   }
   .coin.is-gold { background: var(--accent); }
   .coin.is-pink { background: var(--pop); color: #fff; }
-  .coin.is-bad {
-    background: #2b2b2b; border-color: #000; border-style: dashed; font-size: 18px;
-    animation: coin-float 2.6s ease-in forwards, bad-wobble .5s ease-in-out infinite;
-  }
-  @keyframes bad-wobble {
-    0%, 100% { box-shadow: 0 3px 0 var(--ink), 0 0 0 0 rgba(255,93,115,.5); }
-    50%      { box-shadow: 0 3px 0 var(--ink), 0 0 0 4px rgba(255,93,115,.45); }
-  }
+  .coin.is-bad { background: #3a3a3a; color: #fff; }
   .spark { position: absolute; width: 10px; height: 10px; border-radius: 2px; pointer-events: none; z-index: 19; animation: spark-fly .5s ease-out forwards; }
   @keyframes spark-fly { to { transform: translate(var(--dx), var(--dy)) scale(0) rotate(180deg); opacity: 0; } }
   .float-score { position: absolute; z-index: 25; font-weight: 700; font-size: 18px; color: var(--good); pointer-events: none; text-shadow: 1px 1px 0 #fff; animation: float-up .8s ease-out forwards; }
   .float-score.is-loss { color: var(--pop); }
   @keyframes float-up { to { transform: translateY(-46px); opacity: 0; } }
 
-  /* ---------- ヒント & 実績トースト ---------- */
-  .hint { font-size: 12px; opacity: 0.6; text-align: center; margin: 0; }
-  .hint b { color: var(--pop); }
+  /* ---------- 実績トースト ---------- */
   .toasts { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
   .toast {
     display: flex; align-items: center; gap: 8px;
@@ -285,10 +276,6 @@
       <div class="hud__item hud__item--combo" id="comboBox">
         <span class="hud__label">COMBO</span>
         <span class="hud__value" id="combo">x1</span>
-      </div>
-      <div class="hud__item">
-        <span class="hud__label">BEST</span>
-        <span class="hud__value" id="best">0</span>
       </div>
     </header>
 
@@ -333,8 +320,6 @@
       </div>
     </div>
 
-    <p class="hint">★コインをタップして集めよう ／ <b>💣ハズレは踏むと減点</b>＆コンボ消滅！ ／ ゾロ目は<b>チャンスタイム</b></p>
-
     <div class="toasts" id="toasts" aria-live="polite"></div>
   </main>
 
@@ -354,7 +339,6 @@
     const toasts  = document.getElementById("toasts");
     const scoreEl = document.getElementById("score");
     const comboEl = document.getElementById("combo");
-    const bestEl  = document.getElementById("best");
     const comboBox = document.getElementById("comboBox");
     const ampm    = clock.querySelector("[data-ampm]");
 
@@ -365,12 +349,10 @@
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); } catch (_) {}
     let score = 0;
-    let best  = saved.best || 0;
     let combo = 1;
     let comboTimer = null;
     let chanceUntil = 0;
     const unlocked = new Set(saved.achievements || []);
-    bestEl.textContent = best;
 
     const ACHIEVEMENTS = [
       { id: "first",   emoji: "✨", name: "はじめの一歩",   desc: "コインを初キャッチ",       test: (s) => s.catches >= 1 },
@@ -479,7 +461,7 @@
 
       const coin = document.createElement("div");
       coin.className = "coin is-" + type;
-      coin.textContent = { bad: "💣", pink: "★", gold: "●" }[type];
+      coin.textContent = { bad: "✕", pink: "★", gold: "●" }[type];
       coin.dataset.value = { bad: -30, pink: 50, gold: 10 }[type];
       coin.dataset.bad = type === "bad" ? "1" : "";
       coin.dataset.chance = isChance ? "1" : "";
@@ -532,7 +514,6 @@
       scoreEl.classList.remove("score-bump");
       void scoreEl.offsetWidth;
       scoreEl.classList.add("score-bump");
-      if (score > best) { best = score; bestEl.textContent = best; persist(); }
       if (x != null && amount !== 0) {
         const f = document.createElement("div");
         f.className = "float-score" + (amount < 0 ? " is-loss" : "");
@@ -655,7 +636,7 @@
 
     function persist() {
       try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify({ best, achievements: [...unlocked] }));
+        localStorage.setItem(SAVE_KEY, JSON.stringify({ achievements: [...unlocked] }));
       } catch (_) {}
     }
 
