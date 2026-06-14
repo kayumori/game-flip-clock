@@ -542,7 +542,7 @@
         comboBox.classList.add("is-hot");
       }
       clearTimeout(comboTimer);
-      comboTimer = setTimeout(resetCombo, 2600);
+      comboTimer = setTimeout(resetCombo, 15000);
     }
     function resetCombo() {
       if (combo > 1) say("コンボ終了… x" + combo, 1400);
