@@ -27,13 +27,15 @@
 
 ## 🚀 使い方
 
+**`index.html` をダブルクリックして開くだけ。** CSS・JS はすべて1ファイルに入っているので、ビルドも追加ファイルも不要です。
+
 ```bash
 git clone https://github.com/<your-name>/game-flip-clock.git
 cd game-flip-clock
 open index.html        # macOS（Windows は start、Linux は xdg-open）
 ```
 
-ビルド不要・依存ゼロ。`index.html` を開くだけです。
+GitHub Pages に置けば URL でそのまま遊べます（Settings → Pages → ブランチを指定するだけ）。
 
 ## ⚙️ カスタマイズ
 
@@ -45,7 +47,7 @@ open index.html        # macOS（Windows は start、Linux は xdg-open）
      data-seconds="true"> <!-- "true" / "false"  秒の表示 -->
 ```
 
-色やサイズは `style.css` の `:root` にある CSS 変数でまとめて変更できます。
+色やサイズは `index.html` 内の `<style>` 先頭、`:root` にある CSS 変数でまとめて変更できます。
 
 ```css
 :root {
@@ -63,10 +65,9 @@ open index.html        # macOS（Windows は start、Linux は xdg-open）
 
 ```
 game-flip-clock/
-├── index.html   # マークアップ（時計 + ゲームUI + マスコット）
-├── style.css    # スタイル / フリップ・コイン・演出のアニメーション
-├── script.js    # 時計の更新 + ゲームエンジン
-└── README.md
+├── index.html   # これ1つで完結（HTML + CSS + JavaScript をすべて内包）
+├── README.md
+└── LICENSE
 ```
 
 ## 📜 ライセンス

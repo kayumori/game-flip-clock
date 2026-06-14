@@ -4,7 +4,270 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Game Flip Clock</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+  /* ============================================================
+     Game Flip Clock  —  遊べるフリップ時計ウィジェット
+     ============================================================ */
+  :root {
+    --bg: #ffffff;
+    --ink: #1c1c1c;
+    --card-bg: #1c1c1c;
+    --card-bg-2: #2b2b2b;
+    --card-low: #141414;
+    --card-line: rgba(0, 0, 0, 0.55);
+    --digit-color: #f9f9f9;
+    --accent: #ffcf33;
+    --pop: #ff5d73;
+    --good: #3ad29f;
+    --colon: #1c1c1c;
+    --radius: 14px;
+    --card-w: clamp(54px, 11vw, 92px);
+    --card-h: clamp(82px, 17vw, 134px);
+    --gap: clamp(6px, 1.2vw, 12px);
+    --font-size: clamp(46px, 10.5vw, 92px);
+    --flip-speed: 0.3s;
+    --ui-font: "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--ui-font);
+    display: grid;
+    place-items: center;
+    overflow-x: hidden;
+  }
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(16px, 3vw, 28px);
+    padding: 24px;
+  }
+  /* ---------- HUD（スコアパネル） ---------- */
+  .hud { display: flex; gap: clamp(10px, 2vw, 22px); align-items: stretch; }
+  .hud__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 86px;
+    padding: 8px 14px;
+    border: 3px solid var(--ink);
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .hud__label { font-size: 11px; letter-spacing: 2px; font-weight: 700; opacity: 0.6; }
+  .hud__value { font-size: clamp(22px, 4vw, 30px); font-weight: 700; line-height: 1.1; }
+  .hud__item--combo .hud__value { color: var(--pop); }
+  .hud__item--combo.is-hot {
+    background: var(--pop);
+    box-shadow: 4px 4px 0 var(--ink);
+    animation: combo-pulse 0.3s ease;
+  }
+  .hud__item--combo.is-hot .hud__value,
+  .hud__item--combo.is-hot .hud__label { color: #fff; }
+  @keyframes combo-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
+  .score-bump { animation: bump 0.25s ease; }
+  @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.25); color: var(--good); } 100% { transform: scale(1); } }
+
+  /* ---------- 時計まわり ---------- */
+  .board { position: relative; display: flex; align-items: flex-end; gap: clamp(8px, 2vw, 20px); }
+  .board.shake { animation: board-shake 0.4s ease; }
+  @keyframes board-shake {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-8px); }
+    30% { transform: translateX(7px); }
+    45% { transform: translateX(-6px); }
+    60% { transform: translateX(4px); }
+    75% { transform: translateX(-2px); }
+  }
+  .clock { position: relative; display: flex; align-items: center; gap: var(--gap); user-select: none; }
+  .clock__group { display: flex; gap: var(--gap); }
+  .clock[data-seconds="false"] [data-sec],
+  .clock[data-seconds="false"] [data-sec-colon] { display: none; }
+  .clock[data-format="24"] [data-ampm] { display: none; }
+
+  /* コロン */
+  .clock__colon { display: flex; flex-direction: column; justify-content: center; gap: clamp(10px, 2.4vw, 22px); padding: 0 2px; }
+  .clock__colon span {
+    width: clamp(7px, 1.4vw, 11px);
+    height: clamp(7px, 1.4vw, 11px);
+    border-radius: 50%;
+    background: var(--colon);
+    animation: blink 2s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0.2; } }
+
+  /* AM/PM バッジ */
+  .clock__ampm {
+    align-self: flex-end;
+    margin-left: 4px;
+    padding: 6px 9px;
+    font-weight: 700;
+    font-size: clamp(13px, 2.6vw, 20px);
+    letter-spacing: 1px;
+    color: #111;
+    background: var(--accent);
+    border-radius: 9px;
+    border: 2px solid var(--ink);
+    box-shadow: 0 4px 0 var(--ink);
+    transform: rotate(-3deg);
+  }
+
+  /* ---------- フリップカード ---------- */
+  .flip {
+    position: relative;
+    width: var(--card-w);
+    height: var(--card-h);
+    font-size: var(--font-size);
+    font-weight: 700;
+    border-radius: var(--radius);
+    background: var(--card-bg);
+    cursor: pointer;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    transition: transform 0.08s ease;
+  }
+  .flip:active { transform: translateY(2px); }
+  .flip.is-poked { animation: poke 0.4s cubic-bezier(.36,.07,.19,.97); }
+  @keyframes poke {
+    0%   { transform: scale(1) rotate(0); }
+    25%  { transform: scale(1.12, .9) rotate(-3deg); }
+    55%  { transform: scale(.94, 1.1) rotate(2deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  .flip .top, .flip .bottom, .flip .flip-top, .flip .flip-bottom {
+    position: absolute; left: 0; width: 100%; height: 50%; overflow: hidden; backface-visibility: hidden;
+  }
+  .flip .top, .flip .flip-top {
+    top: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: linear-gradient(180deg, var(--card-bg-2), var(--card-bg));
+    border-bottom: 1px solid var(--card-line);
+  }
+  .flip .bottom, .flip .flip-bottom {
+    bottom: 0;
+    border-radius: 0 0 var(--radius) var(--radius);
+    background: linear-gradient(180deg, var(--card-bg), var(--card-low));
+  }
+  .flip .top span, .flip .bottom span, .flip .flip-top span, .flip .flip-bottom span {
+    position: absolute; left: 0; width: 100%;
+    height: var(--card-h); line-height: var(--card-h);
+    text-align: center; color: var(--digit-color);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  }
+  .flip .top span, .flip .flip-top span { top: 0; }
+  .flip .bottom span, .flip .flip-bottom span { bottom: 0; }
+  .flip .flip-top { z-index: 3; transform-origin: bottom; animation: flip-down var(--flip-speed) ease-in forwards; }
+  .flip .flip-bottom { z-index: 2; transform-origin: top; transform: rotateX(90deg); animation: flip-up var(--flip-speed) ease-out var(--flip-speed) forwards; }
+  @keyframes flip-down { to { transform: rotateX(-90deg); } }
+  @keyframes flip-up   { to { transform: rotateX(0deg); } }
+
+  /* チャンスタイム（ゾロ目）でカードが光る */
+  .clock.is-chance .flip { animation: chance-glow 0.6s ease-in-out infinite alternate; }
+  @keyframes chance-glow {
+    from { box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 0 0 var(--accent); }
+    to   { box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 0 5px var(--accent); }
+  }
+
+  /* ---------- マスコット ---------- */
+  .buddy { position: relative; width: clamp(70px, 14vw, 104px); cursor: pointer; flex: 0 0 auto; }
+  .buddy__body { width: 100%; display: block; animation: idle 2.4s ease-in-out infinite; transform-origin: bottom center; }
+  @keyframes idle { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.01, .99); } }
+  .buddy.is-happy .buddy__body { animation: happy 0.5s ease; }
+  @keyframes happy {
+    0%   { transform: translateY(0) scale(1); }
+    30%  { transform: translateY(-16px) scale(1.06, .94); }
+    60%  { transform: translateY(0) scale(.96, 1.04); }
+    100% { transform: translateY(0) scale(1); }
+  }
+  .buddy.is-sad .buddy__body { animation: sad-shake 0.5s ease; }
+  @keyframes sad-shake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    20% { transform: translateX(-5px) rotate(-5deg); }
+    40% { transform: translateX(5px) rotate(5deg); }
+    60% { transform: translateX(-4px) rotate(-4deg); }
+    80% { transform: translateX(4px) rotate(4deg); }
+  }
+  .buddy__shell { fill: var(--accent); stroke: var(--ink); stroke-width: 3; }
+  .buddy__foot  { fill: var(--ink); }
+  .buddy__cheek { fill: var(--pop); opacity: 0; transition: opacity .2s; }
+  .buddy.is-happy .buddy__cheek { opacity: .8; }
+  .eye { fill: var(--ink); transform-box: fill-box; transform-origin: center; transition: transform .15s; }
+  .buddy.is-happy .eye { transform: scaleY(0.25); }
+  .buddy.is-sad .eye { transform: scale(1.3); }
+  .buddy__mouth { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; transform-box: fill-box; transform-origin: center; transition: transform .15s; }
+  .buddy.is-sad .buddy__mouth { transform: scaleY(-1) translateY(2px); }
+
+  /* 吹き出し */
+  .buddy__bubble {
+    position: absolute; left: 50%; bottom: 100%;
+    transform: translate(-50%, -6px);
+    white-space: nowrap; background: #fff;
+    border: 3px solid var(--ink); border-radius: 12px;
+    padding: 6px 10px; font-size: 12px; font-weight: 700;
+    box-shadow: 3px 3px 0 var(--ink);
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .buddy__bubble::after {
+    content: ""; position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%); border: 7px solid transparent; border-top-color: var(--ink);
+  }
+  .buddy__bubble.show { opacity: 1; transform: translate(-50%, -10px); }
+
+  /* ---------- コイン & 火花 ---------- */
+  .coin {
+    position: absolute; width: 38px; height: 38px; margin: -19px 0 0 -19px;
+    border-radius: 50%; background: var(--accent); border: 3px solid var(--ink);
+    color: var(--ink); font-size: 20px; font-weight: 700;
+    display: grid; place-items: center; cursor: pointer; z-index: 20;
+    box-shadow: 0 3px 0 var(--ink); animation: coin-float 2.6s ease-in forwards;
+  }
+  .coin:active { transform: scale(.85); }
+  @keyframes coin-float {
+    0%   { opacity: 0; transform: translateY(10px) scale(.5); }
+    12%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-150px) scale(.9); }
+  }
+  .coin.is-gold { background: var(--accent); }
+  .coin.is-pink { background: var(--pop); color: #fff; }
+  .coin.is-bad {
+    background: #2b2b2b; border-color: #000; border-style: dashed; font-size: 18px;
+    animation: coin-float 2.6s ease-in forwards, bad-wobble .5s ease-in-out infinite;
+  }
+  @keyframes bad-wobble {
+    0%, 100% { box-shadow: 0 3px 0 var(--ink), 0 0 0 0 rgba(255,93,115,.5); }
+    50%      { box-shadow: 0 3px 0 var(--ink), 0 0 0 4px rgba(255,93,115,.45); }
+  }
+  .spark { position: absolute; width: 10px; height: 10px; border-radius: 2px; pointer-events: none; z-index: 19; animation: spark-fly .5s ease-out forwards; }
+  @keyframes spark-fly { to { transform: translate(var(--dx), var(--dy)) scale(0) rotate(180deg); opacity: 0; } }
+  .float-score { position: absolute; z-index: 25; font-weight: 700; font-size: 18px; color: var(--good); pointer-events: none; text-shadow: 1px 1px 0 #fff; animation: float-up .8s ease-out forwards; }
+  .float-score.is-loss { color: var(--pop); }
+  @keyframes float-up { to { transform: translateY(-46px); opacity: 0; } }
+
+  /* ---------- ヒント & 実績トースト ---------- */
+  .hint { font-size: 12px; opacity: 0.6; text-align: center; margin: 0; }
+  .hint b { color: var(--pop); }
+  .toasts { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+  .toast {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--ink); color: #fff; border-radius: 12px;
+    padding: 10px 14px; font-size: 13px; font-weight: 700;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.2);
+    animation: toast-in .3s ease, toast-out .3s ease 3s forwards;
+  }
+  .toast .emoji { font-size: 20px; }
+  .toast small { display: block; font-weight: 400; opacity: .8; }
+  @keyframes toast-in  { from { transform: translateX(120%); opacity: 0; } }
+  @keyframes toast-out { to   { transform: translateX(120%); opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flip .flip-top, .flip .flip-bottom { animation-duration: .001s; }
+    .clock__colon span, .buddy__body { animation: none; }
+  }
+  </style>
 </head>
 <body>
   <!--
@@ -14,7 +277,6 @@
   -->
   <main class="stage">
 
-    <!-- スコアパネル -->
     <header class="hud">
       <div class="hud__item">
         <span class="hud__label">SCORE</span>
@@ -30,7 +292,6 @@
       </div>
     </header>
 
-    <!-- 時計本体 + マスコット -->
     <div class="board">
       <div class="clock" id="clock" data-format="12" data-seconds="true">
         <div class="clock__group">
@@ -55,7 +316,6 @@
         <div class="clock__ampm" data-ampm>PM</div>
       </div>
 
-      <!-- マスコット -->
       <div class="buddy" id="buddy" title="クリックしてみて！">
         <div class="buddy__bubble" id="bubble">タップして遊ぼう！</div>
         <svg class="buddy__body" viewBox="0 0 100 100" aria-hidden="true">
@@ -75,10 +335,334 @@
 
     <p class="hint">★コインをタップして集めよう ／ <b>💣ハズレは踏むと減点</b>＆コンボ消滅！ ／ ゾロ目は<b>チャンスタイム</b></p>
 
-    <!-- 実績トースト置き場 -->
     <div class="toasts" id="toasts" aria-live="polite"></div>
   </main>
 
-  <script src="script.js"></script>
+  <script>
+  /* ============================================================
+     Game Flip Clock
+     フリップ時計 + 遊び要素（コインキャッチ / スコア & コンボ /
+     実績 / 反応するマスコット / 触って気持ちいい演出 / ハズレ）
+     ============================================================ */
+  (function () {
+    "use strict";
+
+    const clock   = document.getElementById("clock");
+    const board   = document.querySelector(".board");
+    const buddy   = document.getElementById("buddy");
+    const bubble  = document.getElementById("bubble");
+    const toasts  = document.getElementById("toasts");
+    const scoreEl = document.getElementById("score");
+    const comboEl = document.getElementById("combo");
+    const bestEl  = document.getElementById("best");
+    const comboBox = document.getElementById("comboBox");
+    const ampm    = clock.querySelector("[data-ampm]");
+
+    const cards = {};
+    clock.querySelectorAll(".flip").forEach((el) => (cards[el.dataset.place] = el));
+
+    const SAVE_KEY = "game-flip-clock";
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); } catch (_) {}
+    let score = 0;
+    let best  = saved.best || 0;
+    let combo = 1;
+    let comboTimer = null;
+    let chanceUntil = 0;
+    const unlocked = new Set(saved.achievements || []);
+    bestEl.textContent = best;
+
+    const ACHIEVEMENTS = [
+      { id: "first",   emoji: "✨", name: "はじめの一歩",   desc: "コインを初キャッチ",       test: (s) => s.catches >= 1 },
+      { id: "combo5",  emoji: "🔥", name: "ノッてきた",       desc: "コンボ x5 達成",          test: (s) => s.maxCombo >= 5 },
+      { id: "combo10", emoji: "⚡", name: "止まらない",       desc: "コンボ x10 達成",         test: (s) => s.maxCombo >= 10 },
+      { id: "p100",    emoji: "🪙", name: "コインコレクター", desc: "100点 到達",              test: (s) => s.score >= 100 },
+      { id: "p1000",   emoji: "👑", name: "タイムマスター",   desc: "1000点 到達",             test: (s) => s.score >= 1000 },
+      { id: "chance",  emoji: "🎯", name: "ゾロ目ハンター",   desc: "チャンスタイムでキャッチ", test: (s) => s.chanceCatch >= 1 },
+      { id: "poke50",  emoji: "👆", name: "ぷにぷに中毒",     desc: "カードを50回つつく",      test: (s) => s.pokes >= 50 },
+      { id: "boom",    emoji: "💥", name: "ドンマイ！",       desc: "ハズレを踏んでしまう",     test: (s) => s.bombs >= 1 },
+      { id: "safe20",  emoji: "🍀", name: "慎重派",           desc: "ハズレ無しで20キャッチ",   test: (s) => s.catches >= 20 && s.bombs === 0 },
+    ];
+    const stats = { score: 0, catches: 0, maxCombo: 1, chanceCatch: 0, pokes: 0, bombs: 0 };
+
+    /* ---------- 効果音（WebAudio・ファイル不要） ---------- */
+    let audioCtx = null;
+    function beep(freq, dur, type = "square", vol = 0.06) {
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.value = vol;
+        osc.connect(gain).connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+        gain.gain.setValueAtTime(vol, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        osc.start(t);
+        osc.stop(t + dur);
+      } catch (_) {}
+    }
+
+    /* ---------- フリップ描画 ---------- */
+    function flip(card, next) {
+      const topSpan = card.querySelector(".top span");
+      const bottomSpan = card.querySelector(".bottom span");
+      const current = topSpan.textContent;
+      if (current === next) return;
+      topSpan.textContent = next;
+      bottomSpan.textContent = current;
+      const ft = document.createElement("div");
+      ft.className = "flip-top";
+      ft.innerHTML = "<span>" + current + "</span>";
+      const fb = document.createElement("div");
+      fb.className = "flip-bottom";
+      fb.innerHTML = "<span>" + next + "</span>";
+      card.append(ft, fb);
+      ft.addEventListener("animationend", () => ft.remove());
+      fb.addEventListener("animationend", () => { bottomSpan.textContent = next; fb.remove(); });
+    }
+    const setCard = (place, ch) => cards[place] && flip(cards[place], ch);
+
+    /* ---------- 時計の更新 ---------- */
+    let lastSec = -1;
+    function render() {
+      const now = new Date();
+      let h = now.getHours();
+      const m = now.getMinutes();
+      const s = now.getSeconds();
+      if (clock.dataset.format === "12") {
+        if (ampm) ampm.textContent = h >= 12 ? "PM" : "AM";
+        h = h % 12 || 12;
+      }
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      const ss = String(s).padStart(2, "0");
+      setCard("h-tens", hh[0]); setCard("h-ones", hh[1]);
+      setCard("m-tens", mm[0]); setCard("m-ones", mm[1]);
+      setCard("s-tens", ss[0]); setCard("s-ones", ss[1]);
+      if (s !== lastSec) { lastSec = s; onTick(h, m, s, hh, mm, ss); }
+    }
+
+    function onTick(h, m, s, hh, mm, ss) {
+      const digits = hh + mm;
+      const allSame = digits.split("").every((d) => d === digits[0]);
+      const isStartChance = (m === 0 && s === 0) || (allSame && s === 0) || (hh === mm && s === 0);
+      if (isStartChance) startChance();
+      if (Date.now() > chanceUntil && Math.random() < 0.45) spawnCoin();
+      if (Date.now() <= chanceUntil) { spawnCoin(true); spawnCoin(true); }
+      updateChanceVisual();
+    }
+
+    function startChance() {
+      chanceUntil = Date.now() + 8000;
+      say("チャンスタイム！🎯", 2500);
+      beep(880, 0.12); setTimeout(() => beep(1175, 0.16), 120);
+      updateChanceVisual();
+    }
+    function updateChanceVisual() { clock.classList.toggle("is-chance", Date.now() <= chanceUntil); }
+
+    /* ---------- コイン ---------- */
+    function spawnCoin(isChance = false) {
+      const placeKeys = Object.keys(cards).filter((k) => {
+        if (clock.dataset.seconds === "false" && k.startsWith("s-")) return false;
+        return true;
+      });
+      const anchor = cards[placeKeys[(Math.random() * placeKeys.length) | 0]];
+      const a = anchor.getBoundingClientRect();
+      const b = board.getBoundingClientRect();
+
+      const roll = Math.random();
+      let type = "gold";
+      if (!isChance && roll < 0.22) type = "bad";
+      else if (isChance ? roll < 0.5 : roll > 0.85) type = "pink";
+
+      const coin = document.createElement("div");
+      coin.className = "coin is-" + type;
+      coin.textContent = { bad: "💣", pink: "★", gold: "●" }[type];
+      coin.dataset.value = { bad: -30, pink: 50, gold: 10 }[type];
+      coin.dataset.bad = type === "bad" ? "1" : "";
+      coin.dataset.chance = isChance ? "1" : "";
+      coin.style.left = a.left - b.left + a.width / 2 + (Math.random() * 30 - 15) + "px";
+      coin.style.top  = a.top  - b.top  + (Math.random() * 20) + "px";
+      board.appendChild(coin);
+      coin.addEventListener("animationend", () => coin.remove());
+      coin.addEventListener("pointerdown", (e) => { e.preventDefault(); collectCoin(coin); });
+    }
+
+    function collectCoin(coin) {
+      if (coin.dataset.dead) return;
+      coin.dataset.dead = "1";
+      const rect = coin.getBoundingClientRect();
+      const b = board.getBoundingClientRect();
+      const x = rect.left - b.left + rect.width / 2;
+      const y = rect.top - b.top + rect.height / 2;
+
+      if (coin.dataset.bad) {
+        const loss = Math.min(score, 30);
+        addScore(-loss, x, y);
+        resetCombo();
+        burst(x, y, "#444");
+        sadBuddy();
+        shakeBoard();
+        say("ハズレ…！💥", 1600);
+        beep(140, 0.28, "sawtooth", 0.08);
+        stats.bombs++;
+        coin.remove();
+        checkAchievements();
+        return;
+      }
+
+      addScore(parseInt(coin.dataset.value, 10) * combo, x, y);
+      bumpCombo();
+      burst(x, y, coin.classList.contains("is-pink") ? "#ff5d73" : "#ffcf33");
+      happyBuddy();
+      beep(660 + combo * 40, 0.08, "square");
+      stats.catches++;
+      if (coin.dataset.chance) stats.chanceCatch++;
+      coin.remove();
+      checkAchievements();
+    }
+
+    /* ---------- スコア & コンボ ---------- */
+    function addScore(amount, x, y) {
+      score = Math.max(0, score + amount);
+      stats.score = score;
+      scoreEl.textContent = score;
+      scoreEl.classList.remove("score-bump");
+      void scoreEl.offsetWidth;
+      scoreEl.classList.add("score-bump");
+      if (score > best) { best = score; bestEl.textContent = best; persist(); }
+      if (x != null && amount !== 0) {
+        const f = document.createElement("div");
+        f.className = "float-score" + (amount < 0 ? " is-loss" : "");
+        f.textContent = (amount > 0 ? "+" : "") + amount;
+        f.style.left = x + "px";
+        f.style.top = y + "px";
+        board.appendChild(f);
+        f.addEventListener("animationend", () => f.remove());
+      }
+    }
+
+    function bumpCombo() {
+      combo++;
+      comboEl.textContent = "x" + combo;
+      stats.maxCombo = Math.max(stats.maxCombo, combo);
+      if (combo >= 3) {
+        comboBox.classList.remove("is-hot");
+        void comboBox.offsetWidth;
+        comboBox.classList.add("is-hot");
+      }
+      clearTimeout(comboTimer);
+      comboTimer = setTimeout(resetCombo, 2600);
+    }
+    function resetCombo() {
+      if (combo > 1) say("コンボ終了… x" + combo, 1400);
+      combo = 1;
+      comboEl.textContent = "x1";
+      comboBox.classList.remove("is-hot");
+    }
+
+    /* ---------- エフェクト ---------- */
+    function burst(x, y, color) {
+      for (let i = 0; i < 10; i++) {
+        const p = document.createElement("div");
+        p.className = "spark";
+        p.style.background = color;
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+        const ang = (Math.PI * 2 * i) / 10 + Math.random();
+        const dist = 30 + Math.random() * 30;
+        p.style.setProperty("--dx", Math.cos(ang) * dist + "px");
+        p.style.setProperty("--dy", Math.sin(ang) * dist + "px");
+        board.appendChild(p);
+        p.addEventListener("animationend", () => p.remove());
+      }
+    }
+
+    let bubbleTimer = null;
+    function say(text, ms = 1800) {
+      bubble.textContent = text;
+      bubble.classList.add("show");
+      clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(() => bubble.classList.remove("show"), ms);
+    }
+    let happyTimer = null;
+    function happyBuddy() {
+      buddy.classList.remove("is-happy", "is-sad");
+      void buddy.offsetWidth;
+      buddy.classList.add("is-happy");
+      clearTimeout(happyTimer);
+      happyTimer = setTimeout(() => buddy.classList.remove("is-happy"), 500);
+    }
+    let sadTimer = null;
+    function sadBuddy() {
+      buddy.classList.remove("is-happy", "is-sad");
+      void buddy.offsetWidth;
+      buddy.classList.add("is-sad");
+      clearTimeout(sadTimer);
+      sadTimer = setTimeout(() => buddy.classList.remove("is-sad"), 700);
+    }
+    let shakeTimer = null;
+    function shakeBoard() {
+      board.classList.remove("shake");
+      void board.offsetWidth;
+      board.classList.add("shake");
+      clearTimeout(shakeTimer);
+      shakeTimer = setTimeout(() => board.classList.remove("shake"), 400);
+    }
+
+    /* ---------- カードを「つつく」 ---------- */
+    Object.values(cards).forEach((card) => {
+      card.addEventListener("pointerdown", () => {
+        card.classList.remove("is-poked");
+        void card.offsetWidth;
+        card.classList.add("is-poked");
+        const r = card.getBoundingClientRect();
+        const b = board.getBoundingClientRect();
+        burst(r.left - b.left + r.width / 2, r.top - b.top + r.height / 2, "#bbbbbb");
+        beep(220 + Math.random() * 60, 0.05, "triangle", 0.04);
+        stats.pokes++;
+        checkAchievements();
+      });
+    });
+
+    buddy.addEventListener("pointerdown", () => {
+      happyBuddy();
+      const lines = ["やっほー！", "いまは " + clock.querySelector('[data-place="h-tens"] .top span').textContent + "時台！", "コイン集めよ！", "ぷにっ"];
+      say(lines[(Math.random() * lines.length) | 0]);
+      beep(520, 0.07, "sine", 0.05);
+    });
+
+    /* ---------- 実績 ---------- */
+    function checkAchievements() {
+      ACHIEVEMENTS.forEach((a) => {
+        if (!unlocked.has(a.id) && a.test(stats)) {
+          unlocked.add(a.id);
+          toast(a);
+          persist();
+        }
+      });
+    }
+    function toast(a) {
+      const el = document.createElement("div");
+      el.className = "toast";
+      el.innerHTML = '<span class="emoji">' + a.emoji + '</span><span>実績解除！<small>' + a.name + " — " + a.desc + "</small></span>";
+      toasts.appendChild(el);
+      beep(784, 0.1); setTimeout(() => beep(1046, 0.14), 110);
+      setTimeout(() => el.remove(), 3500);
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({ best, achievements: [...unlocked] }));
+      } catch (_) {}
+    }
+
+    /* ---------- 起動 ---------- */
+    render();
+    setInterval(render, 250);
+  })();
+  </script>
 </body>
 </html>
