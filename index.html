@@ -21,10 +21,10 @@
     --good: #3ad29f;
     --colon: #1c1c1c;
     --radius: 13px;
-    --card-w: 74px;
-    --card-h: 108px;
-    --gap: 9px;
-    --font-size: 74px;
+    --card-w: 84px;
+    --card-h: 124px;
+    --gap: 7px;
+    --font-size: 86px;
     --flip-speed: 0.3s;
     --ui-font: "Courier New", monospace;
   }
@@ -51,7 +51,7 @@
     transform-origin: top left;
   }
   /* ---------- HUD（スコアパネル） ---------- */
-  .hud { display: flex; gap: 10px; align-items: stretch; }
+  .hud { display: flex; gap: 10px; align-items: center; }
   .hud__item {
     display: flex;
     flex-direction: column;
@@ -184,7 +184,7 @@
   }
 
   /* ---------- マスコット ---------- */
-  .buddy { position: relative; width: 64px; cursor: pointer; flex: 0 0 auto; }
+  .buddy { position: relative; width: 56px; cursor: pointer; flex: 0 0 auto; }
   .buddy__body { width: 100%; display: block; animation: idle 2.4s ease-in-out infinite; transform-origin: bottom center; }
   @keyframes idle { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.01, .99); } }
   .buddy.is-happy .buddy__body { animation: happy 0.5s ease; }
@@ -214,19 +214,20 @@
 
   /* 吹き出し */
   .buddy__bubble {
-    position: absolute; left: 50%; bottom: 100%;
-    transform: translate(-50%, -6px);
+    position: absolute; left: 100%; top: 50%;
+    transform: translate(6px, -50%);
     white-space: nowrap; background: #fff;
     border: 3px solid var(--ink); border-radius: 12px;
     padding: 6px 10px; font-size: 12px; font-weight: 700;
     box-shadow: 3px 3px 0 var(--ink);
     opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+    z-index: 30;
   }
   .buddy__bubble::after {
-    content: ""; position: absolute; top: 100%; left: 50%;
-    transform: translateX(-50%); border: 7px solid transparent; border-top-color: var(--ink);
+    content: ""; position: absolute; right: 100%; top: 50%;
+    transform: translateY(-50%); border: 7px solid transparent; border-right-color: var(--ink);
   }
-  .buddy__bubble.show { opacity: 1; transform: translate(-50%, -10px); }
+  .buddy__bubble.show { opacity: 1; transform: translate(10px, -50%); }
 
   /* ---------- コイン & 火花 ---------- */
   .coin {
@@ -289,6 +290,22 @@
         <span class="hud__label">COMBO</span>
         <span class="hud__value" id="combo">x1</span>
       </div>
+
+      <div class="buddy" id="buddy" title="クリックしてみて！">
+        <svg class="buddy__body" viewBox="0 0 100 100" aria-hidden="true">
+          <rect class="buddy__shell" x="14" y="20" width="72" height="64" rx="20" />
+          <circle class="buddy__cheek" cx="30" cy="58" r="6" />
+          <circle class="buddy__cheek" cx="70" cy="58" r="6" />
+          <g class="buddy__eyes">
+            <circle class="eye" cx="38" cy="46" r="6" />
+            <circle class="eye" cx="62" cy="46" r="6" />
+          </g>
+          <path class="buddy__mouth" d="M42 62 Q50 70 58 62" fill="none" />
+          <rect class="buddy__foot" x="28" y="82" width="14" height="10" rx="4" />
+          <rect class="buddy__foot" x="58" y="82" width="14" height="10" rx="4" />
+        </svg>
+        <div class="buddy__bubble" id="bubble">タップして遊ぼう！</div>
+      </div>
     </header>
 
     <div class="board">
@@ -313,22 +330,6 @@
         </div>
 
         <div class="clock__ampm" data-ampm>PM</div>
-      </div>
-
-      <div class="buddy" id="buddy" title="クリックしてみて！">
-        <div class="buddy__bubble" id="bubble">タップして遊ぼう！</div>
-        <svg class="buddy__body" viewBox="0 0 100 100" aria-hidden="true">
-          <rect class="buddy__shell" x="14" y="20" width="72" height="64" rx="20" />
-          <circle class="buddy__cheek" cx="30" cy="58" r="6" />
-          <circle class="buddy__cheek" cx="70" cy="58" r="6" />
-          <g class="buddy__eyes">
-            <circle class="eye" cx="38" cy="46" r="6" />
-            <circle class="eye" cx="62" cy="46" r="6" />
-          </g>
-          <path class="buddy__mouth" d="M42 62 Q50 70 58 62" fill="none" />
-          <rect class="buddy__foot" x="28" y="82" width="14" height="10" rx="4" />
-          <rect class="buddy__foot" x="58" y="82" width="14" height="10" rx="4" />
-        </svg>
       </div>
     </div>
 
