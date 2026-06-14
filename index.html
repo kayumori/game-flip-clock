@@ -20,11 +20,11 @@
     --pop: #ff5d73;
     --good: #3ad29f;
     --colon: #1c1c1c;
-    --radius: 14px;
-    --card-w: clamp(54px, 11vw, 92px);
-    --card-h: clamp(82px, 17vw, 134px);
-    --gap: clamp(6px, 1.2vw, 12px);
-    --font-size: clamp(46px, 10.5vw, 92px);
+    --radius: 13px;
+    --card-w: 74px;
+    --card-h: 108px;
+    --gap: 9px;
+    --font-size: 74px;
     --flip-speed: 0.3s;
     --ui-font: "Courier New", monospace;
   }
@@ -37,17 +37,21 @@
     font-family: var(--ui-font);
     display: grid;
     place-items: center;
-    overflow-x: hidden;
+    overflow: hidden;
   }
+  /* 埋め込み幅にぴったり収めるためのスケール用ラッパー（サイズはJSが設定） */
+  .fit { display: block; }
   .stage {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(16px, 3vw, 28px);
-    padding: 24px;
+    gap: 18px;
+    padding: 14px;
+    width: max-content;        /* 内容ぴったりの自然幅（測定が安定する） */
+    transform-origin: top left;
   }
   /* ---------- HUD（スコアパネル） ---------- */
-  .hud { display: flex; gap: clamp(10px, 2vw, 22px); align-items: stretch; }
+  .hud { display: flex; gap: 12px; align-items: stretch; }
   .hud__item {
     display: flex;
     flex-direction: column;
@@ -60,7 +64,7 @@
     box-shadow: 4px 4px 0 var(--ink);
   }
   .hud__label { font-size: 11px; letter-spacing: 2px; font-weight: 700; opacity: 0.6; }
-  .hud__value { font-size: clamp(22px, 4vw, 30px); font-weight: 700; line-height: 1.1; }
+  .hud__value { font-size: 26px; font-weight: 700; line-height: 1.1; }
   .hud__item--combo .hud__value { color: var(--pop); }
   .hud__item--combo.is-hot {
     background: var(--pop);
@@ -74,7 +78,7 @@
   @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.25); color: var(--good); } 100% { transform: scale(1); } }
 
   /* ---------- 時計まわり ---------- */
-  .board { position: relative; display: flex; align-items: flex-end; gap: clamp(8px, 2vw, 20px); }
+  .board { position: relative; display: flex; align-items: flex-end; gap: 14px; }
   .board.shake { animation: board-shake 0.4s ease; }
   @keyframes board-shake {
     0%, 100% { transform: translateX(0); }
@@ -91,10 +95,10 @@
   .clock[data-format="24"] [data-ampm] { display: none; }
 
   /* コロン */
-  .clock__colon { display: flex; flex-direction: column; justify-content: center; gap: clamp(10px, 2.4vw, 22px); padding: 0 2px; }
+  .clock__colon { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 0 2px; }
   .clock__colon span {
-    width: clamp(7px, 1.4vw, 11px);
-    height: clamp(7px, 1.4vw, 11px);
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
     background: var(--colon);
     animation: blink 2s steps(1) infinite;
@@ -107,7 +111,7 @@
     margin-left: 4px;
     padding: 6px 9px;
     font-weight: 700;
-    font-size: clamp(13px, 2.6vw, 20px);
+    font-size: 17px;
     letter-spacing: 1px;
     color: #111;
     background: var(--accent);
@@ -180,7 +184,7 @@
   }
 
   /* ---------- マスコット ---------- */
-  .buddy { position: relative; width: clamp(70px, 14vw, 104px); cursor: pointer; flex: 0 0 auto; }
+  .buddy { position: relative; width: 88px; cursor: pointer; flex: 0 0 auto; }
   .buddy__body { width: 100%; display: block; animation: idle 2.4s ease-in-out infinite; transform-origin: bottom center; }
   @keyframes idle { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.01, .99); } }
   .buddy.is-happy .buddy__body { animation: happy 0.5s ease; }
@@ -273,7 +277,8 @@
       data-format  : "12" | "24"   (12時間 / 24時間表記)
       data-seconds : "true"|"false" (秒の表示)
   -->
-  <main class="stage">
+  <div class="fit" id="fit">
+  <main class="stage" id="stage">
 
     <header class="hud">
       <div class="hud__item">
@@ -327,8 +332,9 @@
       </div>
     </div>
 
-    <div class="toasts" id="toasts" aria-live="polite"></div>
   </main>
+  </div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
 
   <script>
   /* ============================================================
@@ -651,8 +657,27 @@
       } catch (_) {}
     }
 
+    /* ---------- 埋め込み幅にぴったり収める（全体を等倍スケール） ---------- */
+    const fitBox = document.getElementById("fit");
+    const stage  = document.getElementById("stage");
+    function applyFit() {
+      stage.style.transform = "none";
+      const w = stage.offsetWidth;
+      const h = stage.offsetHeight;
+      const availW = document.documentElement.clientWidth || window.innerWidth;
+      const availH = document.documentElement.clientHeight || window.innerHeight;
+      let scale = Math.min(availW / w, availH / h);
+      scale = Math.max(0.1, Math.min(scale, 1.6)); // 拡大しすぎ防止
+      stage.style.transform = "scale(" + scale + ")";
+      fitBox.style.width = w * scale + "px";
+      fitBox.style.height = h * scale + "px";
+    }
+    window.addEventListener("resize", applyFit);
+    window.addEventListener("load", applyFit);
+
     /* ---------- 起動 ---------- */
     render();
+    applyFit();
     setInterval(render, 250);
   })();
   </script>
