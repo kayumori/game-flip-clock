@@ -357,7 +357,6 @@
     try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); } catch (_) {}
     let score = 0;
     let combo = 1;
-    let comboTimer = null;
     let chanceUntil = 0;
     const unlocked = new Set(saved.achievements || []);
 
@@ -475,7 +474,11 @@
       coin.style.left = a.left - b.left + a.width / 2 + (Math.random() * 30 - 15) + "px";
       coin.style.top  = a.top  - b.top  + (Math.random() * 20) + "px";
       board.appendChild(coin);
-      coin.addEventListener("animationend", () => coin.remove());
+      coin.addEventListener("animationend", () => {
+        // 良いコインを取り逃して流れていったらコンボ終了（爆弾の見送りはセーフ）
+        if (!coin.dataset.dead && !coin.dataset.bad) missCombo();
+        coin.remove();
+      });
       coin.addEventListener("pointerdown", (e) => { e.preventDefault(); collectCoin(coin); });
     }
 
@@ -541,14 +544,15 @@
         void comboBox.offsetWidth;
         comboBox.classList.add("is-hot");
       }
-      clearTimeout(comboTimer);
-      comboTimer = setTimeout(resetCombo, 15000);
     }
     function resetCombo() {
-      if (combo > 1) say("コンボ終了… x" + combo, 1400);
       combo = 1;
       comboEl.textContent = "x1";
       comboBox.classList.remove("is-hot");
+    }
+    function missCombo() {
+      if (combo > 1) say("見逃した… コンボ終了", 1400);
+      resetCombo();
     }
 
     /* ---------- エフェクト ---------- */
