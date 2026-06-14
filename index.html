@@ -45,26 +45,26 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 18px;
-    padding: 14px;
+    gap: 10px;
+    padding: 10px;
     width: max-content;        /* 内容ぴったりの自然幅（測定が安定する） */
     transform-origin: top left;
   }
   /* ---------- HUD（スコアパネル） ---------- */
-  .hud { display: flex; gap: 12px; align-items: stretch; }
+  .hud { display: flex; gap: 10px; align-items: stretch; }
   .hud__item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 86px;
-    padding: 8px 14px;
+    min-width: 70px;
+    padding: 5px 11px;
     border: 3px solid var(--ink);
-    border-radius: 12px;
+    border-radius: 11px;
     background: #fff;
     box-shadow: 4px 4px 0 var(--ink);
   }
-  .hud__label { font-size: 11px; letter-spacing: 2px; font-weight: 700; opacity: 0.6; }
-  .hud__value { font-size: 26px; font-weight: 700; line-height: 1.1; }
+  .hud__label { font-size: 9px; letter-spacing: 2px; font-weight: 700; opacity: 0.6; }
+  .hud__value { font-size: 21px; font-weight: 700; line-height: 1.1; }
   .hud__item--combo .hud__value { color: var(--pop); }
   .hud__item--combo.is-hot {
     background: var(--pop);
@@ -78,7 +78,7 @@
   @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.25); color: var(--good); } 100% { transform: scale(1); } }
 
   /* ---------- 時計まわり ---------- */
-  .board { position: relative; display: flex; align-items: flex-end; gap: 14px; }
+  .board { position: relative; display: flex; align-items: flex-end; gap: 10px; }
   .board.shake { animation: board-shake 0.4s ease; }
   @keyframes board-shake {
     0%, 100% { transform: translateX(0); }
@@ -108,10 +108,10 @@
   /* AM/PM バッジ */
   .clock__ampm {
     align-self: flex-end;
-    margin-left: 4px;
-    padding: 6px 9px;
+    margin-left: 3px;
+    padding: 5px 7px;
     font-weight: 700;
-    font-size: 17px;
+    font-size: 15px;
     letter-spacing: 1px;
     color: #111;
     background: var(--accent);
@@ -184,7 +184,7 @@
   }
 
   /* ---------- マスコット ---------- */
-  .buddy { position: relative; width: 88px; cursor: pointer; flex: 0 0 auto; }
+  .buddy { position: relative; width: 64px; cursor: pointer; flex: 0 0 auto; }
   .buddy__body { width: 100%; display: block; animation: idle 2.4s ease-in-out infinite; transform-origin: bottom center; }
   @keyframes idle { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.01, .99); } }
   .buddy.is-happy .buddy__body { animation: happy 0.5s ease; }
