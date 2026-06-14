@@ -8,51 +8,76 @@
 </head>
 <body>
   <!--
-    data-* でカスタマイズできます:
-      data-format   : "12" | "24"   (12時間 / 24時間表記)
-      data-seconds  : "true"|"false" (秒の表示)
-      data-theme    : "arcade" | "mono" | "neon"
+    遊べるフリップ時計ウィジェット
+      data-format  : "12" | "24"   (12時間 / 24時間表記)
+      data-seconds : "true"|"false" (秒の表示)
   -->
-  <div class="clock" id="clock" data-format="12" data-seconds="true" data-theme="arcade">
-    <div class="clock__group">
-      <div class="flip" data-place="h-tens">
-        <div class="top"><span>0</span></div>
-        <div class="bottom"><span>0</span></div>
+  <main class="stage">
+
+    <!-- スコアパネル -->
+    <header class="hud">
+      <div class="hud__item">
+        <span class="hud__label">SCORE</span>
+        <span class="hud__value" id="score">0</span>
       </div>
-      <div class="flip" data-place="h-ones">
-        <div class="top"><span>0</span></div>
-        <div class="bottom"><span>0</span></div>
+      <div class="hud__item hud__item--combo" id="comboBox">
+        <span class="hud__label">COMBO</span>
+        <span class="hud__value" id="combo">x1</span>
+      </div>
+      <div class="hud__item">
+        <span class="hud__label">BEST</span>
+        <span class="hud__value" id="best">0</span>
+      </div>
+    </header>
+
+    <!-- 時計本体 + マスコット -->
+    <div class="board">
+      <div class="clock" id="clock" data-format="12" data-seconds="true">
+        <div class="clock__group">
+          <div class="flip" data-place="h-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+          <div class="flip" data-place="h-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+        </div>
+
+        <div class="clock__colon"><span></span><span></span></div>
+
+        <div class="clock__group">
+          <div class="flip" data-place="m-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+          <div class="flip" data-place="m-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+        </div>
+
+        <div class="clock__colon" data-sec-colon><span></span><span></span></div>
+
+        <div class="clock__group" data-sec>
+          <div class="flip" data-place="s-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+          <div class="flip" data-place="s-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+        </div>
+
+        <div class="clock__ampm" data-ampm>PM</div>
+      </div>
+
+      <!-- マスコット -->
+      <div class="buddy" id="buddy" title="クリックしてみて！">
+        <div class="buddy__bubble" id="bubble">タップして遊ぼう！</div>
+        <svg class="buddy__body" viewBox="0 0 100 100" aria-hidden="true">
+          <rect class="buddy__shell" x="14" y="20" width="72" height="64" rx="20" />
+          <circle class="buddy__cheek" cx="30" cy="58" r="6" />
+          <circle class="buddy__cheek" cx="70" cy="58" r="6" />
+          <g class="buddy__eyes">
+            <circle class="eye" cx="38" cy="46" r="6" />
+            <circle class="eye" cx="62" cy="46" r="6" />
+          </g>
+          <path class="buddy__mouth" d="M42 62 Q50 70 58 62" fill="none" />
+          <rect class="buddy__foot" x="28" y="82" width="14" height="10" rx="4" />
+          <rect class="buddy__foot" x="58" y="82" width="14" height="10" rx="4" />
+        </svg>
       </div>
     </div>
 
-    <div class="clock__colon"><span></span><span></span></div>
+    <p class="hint">★コインをタップして集めよう ／ カードを叩くと跳ねる ／ ゾロ目は<b>チャンスタイム</b>！</p>
 
-    <div class="clock__group">
-      <div class="flip" data-place="m-tens">
-        <div class="top"><span>0</span></div>
-        <div class="bottom"><span>0</span></div>
-      </div>
-      <div class="flip" data-place="m-ones">
-        <div class="top"><span>0</span></div>
-        <div class="bottom"><span>0</span></div>
-      </div>
-    </div>
-
-    <div class="clock__colon" data-sec-colon><span></span><span></span></div>
-
-    <div class="clock__group" data-sec>
-      <div class="flip" data-place="s-tens">
-        <div class="top"><span>0</span></div>
-        <div class="bottom"><span>0</span></div>
-      </div>
-      <div class="flip" data-place="s-ones">
-        <div class="top"><span>0</span></div>
-        <div class="bottom"><span>0</span></div>
-      </div>
-    </div>
-
-    <div class="clock__ampm" data-ampm>PM</div>
-  </div>
+    <!-- 実績トースト置き場 -->
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+  </main>
 
   <script src="script.js"></script>
 </body>

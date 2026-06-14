@@ -1,23 +1,26 @@
 /* ============================================================
-   Game Flip Clock
-   ゲーム感のある横長フリップ時計ウィジェット
+   Game Flip Clock  —  遊べるフリップ時計ウィジェット
    ============================================================ */
 
 :root {
+  --bg: #ffffff;
+  --ink: #1c1c1c;
   --card-bg: #1c1c1c;
   --card-bg-2: #2b2b2b;
   --card-low: #141414;
   --card-line: rgba(0, 0, 0, 0.55);
-  --digit-color: #f5f5f5;
-  --digit-glow: rgba(255, 255, 255, 0.1);
+  --digit-color: #f9f9f9;
   --accent: #ffcf33;
-  --colon: #f5f5f5;
+  --pop: #ff5d73;
+  --good: #3ad29f;
+  --colon: #1c1c1c;
   --radius: 14px;
-  --card-w: clamp(58px, 12vw, 96px);
-  --card-h: clamp(86px, 18vw, 140px);
+  --card-w: clamp(54px, 11vw, 92px);
+  --card-h: clamp(82px, 17vw, 134px);
   --gap: clamp(6px, 1.2vw, 12px);
-  --font-size: clamp(48px, 11vw, 96px);
+  --font-size: clamp(46px, 10.5vw, 92px);
   --flip-speed: 0.3s;
+  --ui-font: "Courier New", monospace;
 }
 
 * { box-sizing: border-box; }
@@ -25,32 +28,96 @@
 body {
   margin: 0;
   min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--ui-font);
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 35%, #3a3f4b 0%, #16181d 70%);
-  font-family: "Courier New", monospace;
+  overflow-x: hidden;
 }
 
-/* ---------- レイアウト ---------- */
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(16px, 3vw, 28px);
+  padding: 24px;
+}
+
+/* ============================================================
+   HUD（スコアパネル）
+   ============================================================ */
+.hud {
+  display: flex;
+  gap: clamp(10px, 2vw, 22px);
+  align-items: stretch;
+}
+.hud__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 86px;
+  padding: 8px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.hud__label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  opacity: 0.6;
+}
+.hud__value {
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 700;
+  line-height: 1.1;
+}
+.hud__item--combo .hud__value { color: var(--pop); }
+.hud__item--combo.is-hot {
+  background: var(--pop);
+  box-shadow: 4px 4px 0 var(--ink);
+  animation: combo-pulse 0.3s ease;
+}
+.hud__item--combo.is-hot .hud__value,
+.hud__item--combo.is-hot .hud__label { color: #fff; }
+@keyframes combo-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.score-bump { animation: bump 0.25s ease; }
+@keyframes bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); color: var(--good); }
+  100% { transform: scale(1); }
+}
+
+/* ============================================================
+   時計まわり
+   ============================================================ */
+.board {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(8px, 2vw, 20px);
+}
+
 .clock {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--gap);
-  padding: clamp(14px, 3vw, 26px);
-  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.45));
   user-select: none;
 }
-
 .clock__group { display: flex; gap: var(--gap); }
 
-/* 秒を隠すとき */
 .clock[data-seconds="false"] [data-sec],
 .clock[data-seconds="false"] [data-sec-colon] { display: none; }
-
-/* 24時間表記のとき AM/PM を隠す */
 .clock[data-format="24"] [data-ampm] { display: none; }
 
-/* ---------- コロン ---------- */
+/* コロン */
 .clock__colon {
   display: flex;
   flex-direction: column;
@@ -63,12 +130,11 @@ body {
   height: clamp(7px, 1.4vw, 11px);
   border-radius: 50%;
   background: var(--colon);
-  box-shadow: 0 0 10px var(--digit-glow);
   animation: blink 2s steps(1) infinite;
 }
-@keyframes blink { 50% { opacity: 0.25; } }
+@keyframes blink { 50% { opacity: 0.2; } }
 
-/* ---------- AM/PM バッジ ---------- */
+/* AM/PM バッジ */
 .clock__ampm {
   align-self: flex-end;
   margin-left: 4px;
@@ -79,13 +145,12 @@ body {
   color: #111;
   background: var(--accent);
   border-radius: 9px;
-  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border: 2px solid var(--ink);
+  box-shadow: 0 4px 0 var(--ink);
   transform: rotate(-3deg);
 }
 
-/* ============================================================
-   フリップカード本体
-   ============================================================ */
+/* ---------- フリップカード ---------- */
 .flip {
   position: relative;
   width: var(--card-w);
@@ -94,14 +159,20 @@ body {
   font-weight: 700;
   border-radius: var(--radius);
   background: var(--card-bg);
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transition: transform 0.08s ease;
+}
+.flip:active { transform: translateY(2px); }
+.flip.is-poked { animation: poke 0.4s cubic-bezier(.36,.07,.19,.97); }
+@keyframes poke {
+  0%   { transform: scale(1) rotate(0); }
+  25%  { transform: scale(1.12, .9) rotate(-3deg); }
+  55%  { transform: scale(.94, 1.1) rotate(2deg); }
+  100% { transform: scale(1) rotate(0); }
 }
 
-/* 上下それぞれの「半分」 */
-.flip .top,
-.flip .bottom,
-.flip .flip-top,
-.flip .flip-bottom {
+.flip .top, .flip .bottom, .flip .flip-top, .flip .flip-bottom {
   position: absolute;
   left: 0;
   width: 100%;
@@ -109,27 +180,18 @@ body {
   overflow: hidden;
   backface-visibility: hidden;
 }
-
-.flip .top,
-.flip .flip-top {
+.flip .top, .flip .flip-top {
   top: 0;
   border-radius: var(--radius) var(--radius) 0 0;
   background: linear-gradient(180deg, var(--card-bg-2), var(--card-bg));
   border-bottom: 1px solid var(--card-line);
 }
-
-.flip .bottom,
-.flip .flip-bottom {
+.flip .bottom, .flip .flip-bottom {
   bottom: 0;
   border-radius: 0 0 var(--radius) var(--radius);
   background: linear-gradient(180deg, var(--card-bg), var(--card-low));
 }
-
-/* 数字本体: カード全体の高さで描画し、上下それぞれで半分だけ見せる */
-.flip .top span,
-.flip .bottom span,
-.flip .flip-top span,
-.flip .flip-bottom span {
+.flip .top span, .flip .bottom span, .flip .flip-top span, .flip .flip-bottom span {
   position: absolute;
   left: 0;
   width: 100%;
@@ -139,12 +201,9 @@ body {
   color: var(--digit-color);
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
-.flip .top span,
-.flip .flip-top span { top: 0; }          /* 上半分を表示 */
-.flip .bottom span,
-.flip .flip-bottom span { bottom: 0; }     /* 下半分を表示 */
+.flip .top span, .flip .flip-top span { top: 0; }
+.flip .bottom span, .flip .flip-bottom span { bottom: 0; }
 
-/* アニメーションする層 */
 .flip .flip-top {
   z-index: 3;
   transform-origin: bottom;
@@ -156,46 +215,177 @@ body {
   transform: rotateX(90deg);
   animation: flip-up var(--flip-speed) ease-out var(--flip-speed) forwards;
 }
+@keyframes flip-down { to { transform: rotateX(-90deg); } }
+@keyframes flip-up   { to { transform: rotateX(0deg); } }
 
-@keyframes flip-down {
-  0%   { transform: rotateX(0deg); }
-  100% { transform: rotateX(-90deg); }
+/* チャンスタイム（ゾロ目）でカードが光る */
+.clock.is-chance .flip {
+  animation: chance-glow 0.6s ease-in-out infinite alternate;
 }
-@keyframes flip-up {
-  0%   { transform: rotateX(90deg); }
-  100% { transform: rotateX(0deg); }
+@keyframes chance-glow {
+  from { box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 0 0 var(--accent); }
+  to   { box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 0 0 5px var(--accent); }
 }
 
 /* ============================================================
-   テーマ
+   マスコット
    ============================================================ */
+.buddy {
+  position: relative;
+  width: clamp(70px, 14vw, 104px);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.buddy__body {
+  width: 100%;
+  display: block;
+  animation: idle 2.4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+@keyframes idle {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  50%      { transform: translateY(-4px) scale(1.01, .99); }
+}
+.buddy.is-happy .buddy__body { animation: happy 0.5s ease; }
+@keyframes happy {
+  0%   { transform: translateY(0) scale(1); }
+  30%  { transform: translateY(-16px) scale(1.06, .94); }
+  60%  { transform: translateY(0) scale(.96, 1.04); }
+  100% { transform: translateY(0) scale(1); }
+}
+.buddy__shell { fill: var(--accent); stroke: var(--ink); stroke-width: 3; }
+.buddy__foot  { fill: var(--ink); }
+.buddy__cheek { fill: var(--pop); opacity: 0; transition: opacity .2s; }
+.buddy.is-happy .buddy__cheek { opacity: .8; }
+.eye { fill: var(--ink); transform-box: fill-box; transform-origin: center; }
+.buddy.is-happy .eye { transform: scaleY(0.25); }  /* ^ ^ にっこり */
+.buddy__mouth { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
 
-/* モノクロ (画像に近いシンプルな黒) */
-.clock[data-theme="mono"] { --accent: #f5f5f5; }
+/* 吹き出し */
+.buddy__bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translate(-50%, -6px);
+  white-space: nowrap;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 3px 3px 0 var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, transform .2s;
+}
+.buddy__bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: var(--ink);
+}
+.buddy__bubble.show { opacity: 1; transform: translate(-50%, -10px); }
 
-/* ネオン (アーケード感マシマシ) */
-.clock[data-theme="neon"] {
-  --card-bg: #10131c;
-  --card-bg-2: #1a1f30;
-  --card-low: #0a0c12;
-  --digit-color: #00f0ff;
-  --accent: #ff2e88;
-  --colon: #00f0ff;
-  --digit-glow: rgba(0, 240, 255, 0.45);
+/* ============================================================
+   コイン & 火花
+   ============================================================ */
+.coin {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--ink);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: 0 3px 0 var(--ink);
+  animation: coin-float 2.6s ease-in forwards;
 }
-.clock[data-theme="neon"] span {
-  text-shadow: 0 0 8px var(--digit-color), 0 0 18px var(--digit-color);
+.coin:active { transform: scale(.85); }
+@keyframes coin-float {
+  0%   { opacity: 0; transform: translateY(10px) scale(.5); }
+  12%  { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-150px) scale(.9); }
 }
-.clock[data-theme="neon"] .flip {
-  box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.25), 0 6px 18px rgba(0, 240, 255, 0.15);
+.coin.is-gold { background: var(--accent); }
+.coin.is-pink { background: var(--pop); color: #fff; }
+
+.spark {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 19;
+  animation: spark-fly .5s ease-out forwards;
 }
-.clock[data-theme="neon"] .clock__ampm {
+@keyframes spark-fly {
+  to { transform: translate(var(--dx), var(--dy)) scale(0) rotate(180deg); opacity: 0; }
+}
+
+.float-score {
+  position: absolute;
+  z-index: 25;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--good);
+  pointer-events: none;
+  text-shadow: 1px 1px 0 #fff;
+  animation: float-up .8s ease-out forwards;
+}
+@keyframes float-up {
+  to { transform: translateY(-46px); opacity: 0; }
+}
+
+/* ============================================================
+   ヒント & 実績トースト
+   ============================================================ */
+.hint {
+  font-size: 12px;
+  opacity: 0.6;
+  text-align: center;
+  margin: 0;
+}
+.hint b { color: var(--pop); }
+
+.toasts {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 50;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ink);
   color: #fff;
-  box-shadow: 0 0 12px var(--accent);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.2);
+  animation: toast-in .3s ease, toast-out .3s ease 3s forwards;
 }
+.toast .emoji { font-size: 20px; }
+.toast small { display: block; font-weight: 400; opacity: .8; }
+@keyframes toast-in  { from { transform: translateX(120%); opacity: 0; } }
+@keyframes toast-out { to   { transform: translateX(120%); opacity: 0; } }
 
-/* 動きを抑える設定への配慮 */
 @media (prefers-reduced-motion: reduce) {
-  .flip .flip-top, .flip .flip-bottom { animation-duration: 0.001s; }
-  .clock__colon span { animation: none; }
+  .flip .flip-top, .flip .flip-bottom { animation-duration: .001s; }
+  .clock__colon span, .buddy__body { animation: none; }
 }
