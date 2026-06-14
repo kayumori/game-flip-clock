@@ -42,8 +42,10 @@
     { id: "p1000",   emoji: "👑", name: "タイムマスター",   desc: "1000点 到達",             test: (s) => s.score >= 1000 },
     { id: "chance",  emoji: "🎯", name: "ゾロ目ハンター",   desc: "チャンスタイムでキャッチ", test: (s) => s.chanceCatch >= 1 },
     { id: "poke50",  emoji: "👆", name: "ぷにぷに中毒",     desc: "カードを50回つつく",      test: (s) => s.pokes >= 50 },
+    { id: "boom",    emoji: "💥", name: "ドンマイ！",       desc: "ハズレを踏んでしまう",     test: (s) => s.bombs >= 1 },
+    { id: "safe20",  emoji: "🍀", name: "慎重派",           desc: "ハズレ無しで20キャッチ",   test: (s) => s.catches >= 20 && s.bombs === 0 },
   ];
-  const stats = { score: 0, catches: 0, maxCombo: 1, chanceCatch: 0, pokes: 0 };
+  const stats = { score: 0, catches: 0, maxCombo: 1, chanceCatch: 0, pokes: 0, bombs: 0 };
 
   /* ============================================================
      効果音（WebAudio・ファイル不要）
@@ -160,11 +162,17 @@
     const a = anchor.getBoundingClientRect();
     const b = board.getBoundingClientRect();
 
+    // 種類を決定：チャンスタイム中はハズレ無し、通常は約22%でハズレ（爆弾）
+    const roll = Math.random();
+    let type = "gold";
+    if (!isChance && roll < 0.22) type = "bad";
+    else if (isChance ? roll < 0.5 : roll > 0.85) type = "pink";
+
     const coin = document.createElement("div");
-    const pink = isChance && Math.random() < 0.5;
-    coin.className = "coin " + (pink ? "is-pink" : "is-gold");
-    coin.textContent = pink ? "★" : "●";
-    coin.dataset.value = pink ? 50 : 10;
+    coin.className = "coin is-" + type;
+    coin.textContent = { bad: "💣", pink: "★", gold: "●" }[type];
+    coin.dataset.value = { bad: -30, pink: 50, gold: 10 }[type];
+    coin.dataset.bad = type === "bad" ? "1" : "";
     coin.dataset.chance = isChance ? "1" : "";
     coin.style.left = a.left - b.left + a.width / 2 + (Math.random() * 30 - 15) + "px";
     coin.style.top  = a.top  - b.top  + (Math.random() * 20) + "px";
@@ -180,13 +188,27 @@
   function collectCoin(coin) {
     if (coin.dataset.dead) return;
     coin.dataset.dead = "1";
-    const value = parseInt(coin.dataset.value, 10) * combo;
     const rect = coin.getBoundingClientRect();
     const b = board.getBoundingClientRect();
     const x = rect.left - b.left + rect.width / 2;
     const y = rect.top - b.top + rect.height / 2;
 
-    addScore(value, x, y);
+    if (coin.dataset.bad) {        // ハズレ（爆弾）を踏んだ
+      const loss = Math.min(score, 30);
+      addScore(-loss, x, y);
+      resetCombo();
+      burst(x, y, "#444");
+      sadBuddy();
+      shakeBoard();
+      say("ハズレ…！💥", 1600);
+      beep(140, 0.28, "sawtooth", 0.08);
+      stats.bombs++;
+      coin.remove();
+      checkAchievements();
+      return;
+    }
+
+    addScore(parseInt(coin.dataset.value, 10) * combo, x, y);
     bumpCombo();
     burst(x, y, coin.classList.contains("is-pink") ? "#ff5d73" : "#ffcf33");
     happyBuddy();
@@ -202,7 +224,7 @@
      スコア & コンボ
      ============================================================ */
   function addScore(amount, x, y) {
-    score += amount;
+    score = Math.max(0, score + amount);
     stats.score = score;
     scoreEl.textContent = score;
     scoreEl.classList.remove("score-bump");
@@ -214,10 +236,10 @@
       bestEl.textContent = best;
       persist();
     }
-    if (x != null) {
+    if (x != null && amount !== 0) {
       const f = document.createElement("div");
-      f.className = "float-score";
-      f.textContent = "+" + amount;
+      f.className = "float-score" + (amount < 0 ? " is-loss" : "");
+      f.textContent = (amount > 0 ? "+" : "") + amount;
       f.style.left = x + "px";
       f.style.top = y + "px";
       board.appendChild(f);
@@ -272,11 +294,27 @@
   }
   let happyTimer = null;
   function happyBuddy() {
-    buddy.classList.remove("is-happy");
+    buddy.classList.remove("is-happy", "is-sad");
     void buddy.offsetWidth;
     buddy.classList.add("is-happy");
     clearTimeout(happyTimer);
     happyTimer = setTimeout(() => buddy.classList.remove("is-happy"), 500);
+  }
+  let sadTimer = null;
+  function sadBuddy() {
+    buddy.classList.remove("is-happy", "is-sad");
+    void buddy.offsetWidth;
+    buddy.classList.add("is-sad");
+    clearTimeout(sadTimer);
+    sadTimer = setTimeout(() => buddy.classList.remove("is-sad"), 700);
+  }
+  let shakeTimer = null;
+  function shakeBoard() {
+    board.classList.remove("shake");
+    void board.offsetWidth;
+    board.classList.add("shake");
+    clearTimeout(shakeTimer);
+    shakeTimer = setTimeout(() => board.classList.remove("shake"), 400);
   }
 
   /* ============================================================
