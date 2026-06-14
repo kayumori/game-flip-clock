@@ -1,0 +1,201 @@
+/* ============================================================
+   Game Flip Clock
+   ゲーム感のある横長フリップ時計ウィジェット
+   ============================================================ */
+
+:root {
+  --card-bg: #1c1c1c;
+  --card-bg-2: #2b2b2b;
+  --card-low: #141414;
+  --card-line: rgba(0, 0, 0, 0.55);
+  --digit-color: #f5f5f5;
+  --digit-glow: rgba(255, 255, 255, 0.1);
+  --accent: #ffcf33;
+  --colon: #f5f5f5;
+  --radius: 14px;
+  --card-w: clamp(58px, 12vw, 96px);
+  --card-h: clamp(86px, 18vw, 140px);
+  --gap: clamp(6px, 1.2vw, 12px);
+  --font-size: clamp(48px, 11vw, 96px);
+  --flip-speed: 0.3s;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 35%, #3a3f4b 0%, #16181d 70%);
+  font-family: "Courier New", monospace;
+}
+
+/* ---------- レイアウト ---------- */
+.clock {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: clamp(14px, 3vw, 26px);
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.45));
+  user-select: none;
+}
+
+.clock__group { display: flex; gap: var(--gap); }
+
+/* 秒を隠すとき */
+.clock[data-seconds="false"] [data-sec],
+.clock[data-seconds="false"] [data-sec-colon] { display: none; }
+
+/* 24時間表記のとき AM/PM を隠す */
+.clock[data-format="24"] [data-ampm] { display: none; }
+
+/* ---------- コロン ---------- */
+.clock__colon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(10px, 2.4vw, 22px);
+  padding: 0 2px;
+}
+.clock__colon span {
+  width: clamp(7px, 1.4vw, 11px);
+  height: clamp(7px, 1.4vw, 11px);
+  border-radius: 50%;
+  background: var(--colon);
+  box-shadow: 0 0 10px var(--digit-glow);
+  animation: blink 2s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0.25; } }
+
+/* ---------- AM/PM バッジ ---------- */
+.clock__ampm {
+  align-self: flex-end;
+  margin-left: 4px;
+  padding: 6px 9px;
+  font-weight: 700;
+  font-size: clamp(13px, 2.6vw, 20px);
+  letter-spacing: 1px;
+  color: #111;
+  background: var(--accent);
+  border-radius: 9px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transform: rotate(-3deg);
+}
+
+/* ============================================================
+   フリップカード本体
+   ============================================================ */
+.flip {
+  position: relative;
+  width: var(--card-w);
+  height: var(--card-h);
+  font-size: var(--font-size);
+  font-weight: 700;
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* 上下それぞれの「半分」 */
+.flip .top,
+.flip .bottom,
+.flip .flip-top,
+.flip .flip-bottom {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+.flip .top,
+.flip .flip-top {
+  top: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: linear-gradient(180deg, var(--card-bg-2), var(--card-bg));
+  border-bottom: 1px solid var(--card-line);
+}
+
+.flip .bottom,
+.flip .flip-bottom {
+  bottom: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: linear-gradient(180deg, var(--card-bg), var(--card-low));
+}
+
+/* 数字本体: カード全体の高さで描画し、上下それぞれで半分だけ見せる */
+.flip .top span,
+.flip .bottom span,
+.flip .flip-top span,
+.flip .flip-bottom span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--card-h);
+  line-height: var(--card-h);
+  text-align: center;
+  color: var(--digit-color);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.flip .top span,
+.flip .flip-top span { top: 0; }          /* 上半分を表示 */
+.flip .bottom span,
+.flip .flip-bottom span { bottom: 0; }     /* 下半分を表示 */
+
+/* アニメーションする層 */
+.flip .flip-top {
+  z-index: 3;
+  transform-origin: bottom;
+  animation: flip-down var(--flip-speed) ease-in forwards;
+}
+.flip .flip-bottom {
+  z-index: 2;
+  transform-origin: top;
+  transform: rotateX(90deg);
+  animation: flip-up var(--flip-speed) ease-out var(--flip-speed) forwards;
+}
+
+@keyframes flip-down {
+  0%   { transform: rotateX(0deg); }
+  100% { transform: rotateX(-90deg); }
+}
+@keyframes flip-up {
+  0%   { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+/* ============================================================
+   テーマ
+   ============================================================ */
+
+/* モノクロ (画像に近いシンプルな黒) */
+.clock[data-theme="mono"] { --accent: #f5f5f5; }
+
+/* ネオン (アーケード感マシマシ) */
+.clock[data-theme="neon"] {
+  --card-bg: #10131c;
+  --card-bg-2: #1a1f30;
+  --card-low: #0a0c12;
+  --digit-color: #00f0ff;
+  --accent: #ff2e88;
+  --colon: #00f0ff;
+  --digit-glow: rgba(0, 240, 255, 0.45);
+}
+.clock[data-theme="neon"] span {
+  text-shadow: 0 0 8px var(--digit-color), 0 0 18px var(--digit-color);
+}
+.clock[data-theme="neon"] .flip {
+  box-shadow: 0 0 0 1px rgba(0, 240, 255, 0.25), 0 6px 18px rgba(0, 240, 255, 0.15);
+}
+.clock[data-theme="neon"] .clock__ampm {
+  color: #fff;
+  box-shadow: 0 0 12px var(--accent);
+}
+
+/* 動きを抑える設定への配慮 */
+@media (prefers-reduced-motion: reduce) {
+  .flip .flip-top, .flip .flip-bottom { animation-duration: 0.001s; }
+  .clock__colon span { animation: none; }
+}

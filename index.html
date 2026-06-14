@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Flip Clock</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!--
+    data-* でカスタマイズできます:
+      data-format   : "12" | "24"   (12時間 / 24時間表記)
+      data-seconds  : "true"|"false" (秒の表示)
+      data-theme    : "arcade" | "mono" | "neon"
+  -->
+  <div class="clock" id="clock" data-format="12" data-seconds="true" data-theme="arcade">
+    <div class="clock__group">
+      <div class="flip" data-place="h-tens">
+        <div class="top"><span>0</span></div>
+        <div class="bottom"><span>0</span></div>
+      </div>
+      <div class="flip" data-place="h-ones">
+        <div class="top"><span>0</span></div>
+        <div class="bottom"><span>0</span></div>
+      </div>
+    </div>
+
+    <div class="clock__colon"><span></span><span></span></div>
+
+    <div class="clock__group">
+      <div class="flip" data-place="m-tens">
+        <div class="top"><span>0</span></div>
+        <div class="bottom"><span>0</span></div>
+      </div>
+      <div class="flip" data-place="m-ones">
+        <div class="top"><span>0</span></div>
+        <div class="bottom"><span>0</span></div>
+      </div>
+    </div>
+
+    <div class="clock__colon" data-sec-colon><span></span><span></span></div>
+
+    <div class="clock__group" data-sec>
+      <div class="flip" data-place="s-tens">
+        <div class="top"><span>0</span></div>
+        <div class="bottom"><span>0</span></div>
+      </div>
+      <div class="flip" data-place="s-ones">
+        <div class="top"><span>0</span></div>
+        <div class="bottom"><span>0</span></div>
+      </div>
+    </div>
+
+    <div class="clock__ampm" data-ampm>PM</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
