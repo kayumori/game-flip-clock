@@ -6,9 +6,7 @@
   <title>Flip Clock / Typing Ascent</title>
   <style>
   /* ============================================================
-     Flip Clock  +  Typing Ascent（タイピング登山）
-     ------------------------------------------------------------
-     時計の数字カードがそのままスペル入力に変わるシステマチックUI
+     Flip Clock + Typing Ascent（タイピング登山）
      ============================================================ */
   :root {
     --bg: #ffffff;
@@ -45,8 +43,10 @@
   }
   .view { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
-  /* ---------- フリップ時計 ---------- */
-  .board { position: relative; display: flex; align-items: flex-end; gap: 10px; }
+  /* ---------- 時計／モード選択の土台 ---------- */
+  .board { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .cluster { align-self: stretch; display: flex; justify-content: center; position: relative; }
+
   .clock { position: relative; display: flex; align-items: center; gap: var(--gap); user-select: none; }
   .clock__group { display: flex; gap: var(--gap); }
   .clock__colon { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 0 2px; }
@@ -89,19 +89,39 @@
   @keyframes flip-down { to { transform: rotateX(-90deg); } }
   @keyframes flip-up   { to { transform: rotateX(0deg); } }
 
-  /* ---------- 山アイコン（スタートボタン） ---------- */
-  .mtn-icon {
-    appearance: none; cursor: pointer; background: none; border: 2px solid var(--ink);
-    border-radius: 12px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 8px;
-    color: var(--ink); font-family: var(--mono); font-size: 11px; letter-spacing: 2px; font-weight: 700;
+  /* ---------- モード選択（時計の位置にパタンと出る） ---------- */
+  .modes { display: flex; gap: 12px; align-items: stretch; }
+  .modecard {
+    appearance: none; cursor: pointer; width: 178px; height: var(--card-h);
+    border: none; border-radius: var(--radius); background: var(--card-bg); color: #fff;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 18px 32px -12px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -3px 8px rgba(0,0,0,.45);
+    transform-origin: top center; animation: flipIn .35s ease backwards;
+    transition: box-shadow .12s, transform .08s;
+  }
+  .modecard b { font-size: 30px; font-weight: 700; letter-spacing: 3px; }
+  .modecard small { font-size: 13px; opacity: .55; letter-spacing: 1px; }
+  .modecard:hover { box-shadow: 0 0 0 3px var(--accent), 0 18px 32px -12px rgba(0,0,0,.5); }
+  .modecard:active { transform: translateY(2px); }
+  .modecard[data-mode="easy"] b   { color: #7fe7c4; }
+  .modecard[data-mode="normal"] b { color: var(--accent); }
+  .modecard[data-mode="hard"] b   { color: var(--bad); }
+  @keyframes flipIn { from { transform: rotateX(-90deg); opacity: 0; } to { transform: rotateX(0); opacity: 1; } }
+
+  /* ---------- START / BACK ボタン（AMの下） ---------- */
+  .startbtn {
+    appearance: none; cursor: pointer; background: none; border: 2px solid var(--ink); border-radius: 12px;
+    padding: 8px 14px; display: inline-flex; align-items: center; gap: 8px; color: var(--ink);
+    font-family: var(--mono); font-size: 11px; letter-spacing: 2px; font-weight: 700;
     transition: background .15s, color .15s, transform .06s;
   }
-  .mtn-icon svg { width: 22px; height: 22px; display: block; }
-  .mtn-icon path { stroke: currentColor; stroke-width: 2; fill: none; stroke-linejoin: round; }
-  .mtn-icon:hover { background: var(--ink); color: #fff; }
-  .mtn-icon:active { transform: translateY(1px); }
+  .startbtn svg { width: 20px; height: 20px; display: block; }
+  .startbtn path { stroke: currentColor; stroke-width: 2; fill: none; stroke-linejoin: round; }
+  .startbtn:hover { background: var(--ink); color: #fff; }
+  .startbtn:active { transform: translateY(1px); }
+  .startbtn.is-back svg { display: none; }
 
-  /* ---------- 共通：システマチックなボタン ---------- */
+  /* ---------- 共通ボタン ---------- */
   .btn {
     appearance: none; font-family: var(--mono); font-weight: 700; cursor: pointer;
     border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink);
@@ -109,30 +129,23 @@
   }
   .btn:hover { background: var(--ink); color: #fff; }
   .btn:active { transform: translateY(1px); }
-  .btn small { display: block; font-weight: 400; font-size: 9px; letter-spacing: 1px; opacity: .6; margin-top: 2px; }
-  .btn:hover small { opacity: .85; }
   .linkbtn { appearance: none; background: none; border: none; cursor: pointer; font-family: var(--mono);
     font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--sub); padding: 4px 6px; }
   .linkbtn:hover { color: var(--ink); }
 
-  /* ---------- モード選択 ---------- */
-  .msel__title { font-size: 12px; letter-spacing: 3px; color: var(--sub); font-weight: 700; }
-  .msel__row { display: flex; gap: 12px; }
-  .msel__row .btn { min-width: 104px; }
-
-  /* ---------- タイピング ---------- */
+  /* ---------- タイピング（常に中央） ---------- */
   .tbar { display: flex; align-items: center; gap: 18px; font-size: 12px; letter-spacing: 2px; color: var(--sub); }
   .tbar b { color: var(--ink); font-size: 17px; letter-spacing: 1px; }
-  .tbar .is-low { color: var(--bad); }
+  .tbar #tTime.is-low { color: var(--bad); }
   .tbar #tRank { color: var(--ink); font-weight: 700; }
   .tbar .linkbtn { margin-left: 4px; font-size: 14px; }
 
-  .tja { font-size: 26px; font-weight: 700; letter-spacing: 6px; color: var(--ink); }
+  .tja { font-size: 24px; font-weight: 700; letter-spacing: 4px; color: var(--ink); text-align: center; max-width: 92vw; }
 
-  .lrow { display: flex; gap: var(--gap); }
+  .lrow { display: flex; gap: var(--gap); flex-wrap: nowrap; justify-content: center; }
   .lcard {
     position: relative; width: var(--lw); height: var(--lh); border-radius: var(--radius);
-    background: var(--card-bg); display: grid; place-items: center;
+    background: var(--card-bg); display: grid; place-items: center; flex: 0 0 auto;
     box-shadow: 0 14px 26px -12px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -3px 8px rgba(0,0,0,.45);
     transition: box-shadow .12s, transform .12s;
   }
@@ -147,7 +160,6 @@
   .lcard.wrong { animation: lshake .25s ease; }
   @keyframes lshake { 0%,100% { transform: translateX(0);} 25% { transform: translateX(-5px);} 75% { transform: translateX(5px);} }
 
-  /* ---------- 登山プログレス ---------- */
   .ascent { width: 460px; max-width: 88vw; }
   .ascent__track { position: relative; height: 4px; background: var(--line); border-radius: 2px; }
   .ascent__fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--ink); border-radius: 2px; transition: width .25s ease; }
@@ -167,6 +179,7 @@
   @media (prefers-reduced-motion: reduce) {
     .flip .flip-top, .flip .flip-bottom { animation-duration: .001s; }
     .clock__colon span { animation: none; }
+    .modecard { animation: none; }
   }
   </style>
 </head>
@@ -174,43 +187,40 @@
   <div class="fit" id="fit">
   <main class="stage" id="stage">
 
-    <!-- ============ 時計 ============ -->
+    <!-- ============ 時計 / モード選択 ============ -->
     <section class="view" id="clockView">
       <div class="board">
-        <div class="clock" id="clock" data-format="12" data-seconds="true">
-          <div class="clock__group">
-            <div class="flip" data-place="h-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-            <div class="flip" data-place="h-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+        <div class="cluster">
+          <div class="clock" id="clock" data-format="12" data-seconds="true">
+            <div class="clock__group">
+              <div class="flip" data-place="h-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+              <div class="flip" data-place="h-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+            </div>
+            <div class="clock__colon"><span></span><span></span></div>
+            <div class="clock__group">
+              <div class="flip" data-place="m-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+              <div class="flip" data-place="m-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+            </div>
+            <div class="clock__colon" data-sec-colon><span></span><span></span></div>
+            <div class="clock__group" data-sec>
+              <div class="flip" data-place="s-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+              <div class="flip" data-place="s-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+            </div>
+            <div class="clock__ampm" data-ampm>PM</div>
           </div>
-          <div class="clock__colon"><span></span><span></span></div>
-          <div class="clock__group">
-            <div class="flip" data-place="m-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-            <div class="flip" data-place="m-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+
+          <div class="modes" id="modes" style="display:none">
+            <button class="modecard" data-mode="easy"><b>EASY</b><small>45s ・ たんご</small></button>
+            <button class="modecard" data-mode="normal"><b>NORMAL</b><small>60s ・ たんご</small></button>
+            <button class="modecard" data-mode="hard"><b>HARD</b><small>90s ・ ことわざ</small></button>
           </div>
-          <div class="clock__colon" data-sec-colon><span></span><span></span></div>
-          <div class="clock__group" data-sec>
-            <div class="flip" data-place="s-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-            <div class="flip" data-place="s-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-          </div>
-          <div class="clock__ampm" data-ampm>PM</div>
         </div>
-      </div>
 
-      <button class="mtn-icon" id="mtnBtn" title="タイピング登山スタート" aria-label="タイピング登山スタート">
-        <svg viewBox="0 0 24 24"><path d="M2 20 L9 7 L13 13 L17 5 L22 20 Z" /></svg>
-        START
-      </button>
-    </section>
-
-    <!-- ============ モード選択 ============ -->
-    <section class="view" id="modeView" style="display:none">
-      <div class="msel__title">SELECT COURSE</div>
-      <div class="msel__row">
-        <button class="btn" data-mode="easy">EASY<small>90s / かんたん</small></button>
-        <button class="btn" data-mode="normal">NORMAL<small>60s / ふつう</small></button>
-        <button class="btn" data-mode="hard">HARD<small>45s / むずかしい</small></button>
+        <button class="startbtn" id="startBtn" title="タイピング登山">
+          <svg viewBox="0 0 24 24"><path d="M2 20 L9 7 L13 13 L17 5 L22 20 Z" /></svg>
+          <span id="startLabel">START</span>
+        </button>
       </div>
-      <button class="linkbtn" id="modeBack">← CLOCK</button>
     </section>
 
     <!-- ============ タイピング ============ -->
@@ -296,7 +306,7 @@
     /* ============================================================
        タイピング登山
        ============================================================ */
-    const MODES = { easy: { time: 90 }, normal: { time: 60 }, hard: { time: 45 } };
+    const MODES = { easy: { time: 45 }, normal: { time: 60 }, hard: { time: 90 } };
     const WORDS = {
       easy: [
         {ja:"すし",ro:"sushi"},{ja:"ねこ",ro:"neko"},{ja:"いぬ",ro:"inu"},{ja:"やま",ro:"yama"},
@@ -313,29 +323,73 @@
         {ja:"せんせい",ro:"sensei"},{ja:"あさごはん",ro:"asagohan"},{ja:"でんわ",ro:"denwa"},
         {ja:"しんぶん",ro:"shinbun"},{ja:"やさい",ro:"yasai"},{ja:"おかし",ro:"okashi"},
       ],
+      // ことわざ・早口言葉（打ちづらい長文）
       hard: [
-        {ja:"しんかんせん",ro:"shinkansen"},{ja:"ありがとう",ro:"arigatou"},{ja:"とうきょう",ro:"toukyou"},
-        {ja:"じてんしゃ",ro:"jitensha"},{ja:"しゅくだい",ro:"shukudai"},{ja:"りょこう",ro:"ryokou"},
-        {ja:"ぎゅうにゅう",ro:"gyuunyuu"},{ja:"びじゅつかん",ro:"bijutsukan"},{ja:"こんにちは",ro:"konnichiha"},
-        {ja:"きょうしつ",ro:"kyoushitsu"},{ja:"きっぷ",ro:"kippu"},{ja:"しゃしん",ro:"shashin"},
-        {ja:"ひゃっかてん",ro:"hyakkaten"},{ja:"りゅうがく",ro:"ryuugaku"},{ja:"しゅっぱつ",ro:"shuppatsu"},
-        {ja:"ちきゅう",ro:"chikyuu"},{ja:"ぎんこう",ro:"ginkou"},{ja:"しゃちょう",ro:"shachou"},
+        {ja:"すもももももももものうち",ro:"sumomomomomomomomonouchi"},
+        {ja:"なまむぎなまごめなまたまご",ro:"namamuginamagomenamatamago"},
+        {ja:"あかまきがみあおまきがみ",ro:"akamakigamiaomakigami"},
+        {ja:"となりのきゃくはよくかきくうきゃくだ",ro:"tonarinokyakuhayokukakikuukyakuda"},
+        {ja:"ちりもつもればやまとなる",ro:"chirimotsumorebayamatonaru"},
+        {ja:"いしのうえにもさんねん",ro:"ishinouenimosannen"},
+        {ja:"さるもきからおちる",ro:"sarumokikaraochiru"},
+        {ja:"ななころびやおき",ro:"nanakorobiyaoki"},
+        {ja:"とらぬたぬきのかわざんよう",ro:"toranutanukinokawazanyou"},
+        {ja:"のうあるたかはつめをかくす",ro:"nouarutakahatsumewokakusu"},
+        {ja:"いそがばまわれ",ro:"isogabamaware"},
+        {ja:"ねこにこばん",ro:"nekonikoban"},
       ],
     };
     const RANKS = [
-      { min: 0,  name: "ふもと" }, { min: 3,  name: "丘" }, { min: 7,  name: "高尾山" },
+      { min: 0, name: "ふもと" }, { min: 3, name: "丘" }, { min: 7, name: "高尾山" },
       { min: 12, name: "筑波山" }, { min: 18, name: "富士山" }, { min: 25, name: "モンブラン" },
       { min: 34, name: "エベレスト" },
     ];
     const SUMMIT = 34;
     function rankFor(n) { let r = RANKS[0]; for (const x of RANKS) if (n >= x.min) r = x; return r; }
+    // 文字数でカードサイズを調整（長文でも収まるように）
+    function sizeFor(len) {
+      if (len <= 7)  return [62, 94, 56, 7];
+      if (len <= 11) return [48, 74, 42, 6];
+      if (len <= 16) return [36, 56, 30, 5];
+      if (len <= 22) return [28, 44, 23, 4];
+      return [22, 36, 18, 3];
+    }
 
-    const views = ["clockView", "modeView", "typeView", "resView"];
+    const views = ["clockView", "typeView", "resView"];
     function showView(name) {
       views.forEach((v) => (document.getElementById(v).style.display = v === name ? "" : "none"));
       applyFit();
     }
 
+    /* ---------- モード選択（時計⇄モード） ---------- */
+    const modes = document.getElementById("modes");
+    const startBtn = document.getElementById("startBtn");
+    const startLabel = document.getElementById("startLabel");
+    function openModes() {
+      clock.style.display = "none";
+      modes.style.display = "flex";
+      modes.querySelectorAll(".modecard").forEach((c, i) => {
+        c.style.animation = "none"; void c.offsetWidth;
+        c.style.animation = ""; c.style.animationDelay = (i * 0.07) + "s";
+      });
+      startLabel.textContent = "BACK"; startBtn.classList.add("is-back");
+      applyFit();
+    }
+    function closeModes() {
+      modes.style.display = "none";
+      clock.style.display = "";
+      startLabel.textContent = "START"; startBtn.classList.remove("is-back");
+      applyFit();
+    }
+    startBtn.addEventListener("click", () => {
+      if (modes.style.display === "none") { openModes(); beep(523, 0.08); }
+      else { closeModes(); beep(392, 0.08); }
+    });
+    modes.querySelectorAll(".modecard").forEach((b) =>
+      b.addEventListener("click", () => { closeModes(); startTyping(b.dataset.mode); })
+    );
+
+    /* ---------- タイピング本体 ---------- */
     const lrow = document.getElementById("lrow");
     const tJa = document.getElementById("tJa");
     const tTime = document.getElementById("tTime");
@@ -363,6 +417,11 @@
       const list = WORDS[T.mode];
       const w = list[(Math.random() * list.length) | 0];
       T.target = w.ro; T.pos = 0; tJa.textContent = w.ja;
+      const [lw, lh, lf, g] = sizeFor(w.ro.length);
+      lrow.style.setProperty("--lw", lw + "px");
+      lrow.style.setProperty("--lh", lh + "px");
+      lrow.style.setProperty("--lf", lf + "px");
+      lrow.style.gap = g + "px";
       lrow.innerHTML = ""; T.cards = [];
       for (let i = 0; i < w.ro.length; i++) {
         const c = document.createElement("div");
@@ -370,7 +429,7 @@
         c.innerHTML = "<span>" + w.ro[i] + "</span>";
         lrow.appendChild(c); T.cards.push(c);
       }
-      paintCards();
+      paintCards(); applyFit();
     }
     function paintCards() {
       T.cards.forEach((c, i) => {
@@ -390,7 +449,7 @@
       if (!T) return;
       if (ch === T.target[T.pos]) {
         T.pos++; T.hits++;
-        beep(600 + T.pos * 28, 0.04, "square", 0.045);
+        beep(600 + T.pos * 24, 0.04, "square", 0.045);
         if (T.pos >= T.target.length) {
           T.count++; updateTop(); updateAscent();
           beep(900, 0.08, "triangle", 0.06);
@@ -426,13 +485,10 @@
     });
     typeView.addEventListener("pointerdown", () => { try { tInput.focus(); } catch (_) {} });
 
-    document.getElementById("mtnBtn").addEventListener("click", () => { showView("modeView"); beep(523, 0.08); });
-    document.getElementById("modeBack").addEventListener("click", () => showView("clockView"));
-    document.querySelectorAll("#modeView .btn").forEach((b) => b.addEventListener("click", () => startTyping(b.dataset.mode)));
-    document.getElementById("tQuit").addEventListener("click", () => { if (T) clearInterval(T.timerId); showView("clockView"); });
+    document.getElementById("tQuit").addEventListener("click", () => { if (T) clearInterval(T.timerId); closeModes(); showView("clockView"); });
     document.getElementById("rRetry").addEventListener("click", () => startTyping(T.mode));
-    document.getElementById("rMode").addEventListener("click", () => showView("modeView"));
-    document.getElementById("rHome").addEventListener("click", () => showView("clockView"));
+    document.getElementById("rMode").addEventListener("click", () => { showView("clockView"); openModes(); });
+    document.getElementById("rHome").addEventListener("click", () => { closeModes(); showView("clockView"); });
 
     /* ---------- 埋め込み幅にぴったり収める ---------- */
     const fitBox = document.getElementById("fit");
