@@ -6,7 +6,7 @@
   <title>Game Flip Clock</title>
   <style>
   /* ============================================================
-     Game Flip Clock  —  遊べるフリップ時計ウィジェット
+     Game Flip Clock  —  遊べるフリップ時計 + タイピング登山
      ============================================================ */
   :root {
     --bg: #ffffff;
@@ -15,7 +15,6 @@
     --card-bg-2: #2b2b2b;
     --card-low: #141414;
     --card-line: rgba(0, 0, 0, 0.55);
-    --digit-color: #f9f9f9;
     --accent: #ffcf33;
     --pop: #ff5d73;
     --good: #3ad29f;
@@ -39,7 +38,6 @@
     place-items: center;
     overflow: hidden;
   }
-  /* 埋め込み幅にぴったり収めるためのスケール用ラッパー（サイズはJSが設定） */
   .fit { display: block; }
   .stage {
     display: flex;
@@ -47,28 +45,24 @@
     align-items: center;
     gap: 10px;
     padding: 10px;
-    width: max-content;        /* 内容ぴったりの自然幅（測定が安定する） */
+    width: max-content;
     transform-origin: top left;
   }
+  .view { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
   /* ---------- HUD（スコアパネル） ---------- */
   .hud { display: flex; gap: 10px; align-items: center; }
   .hud__item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-width: 70px;
-    padding: 5px 11px;
-    border: 3px solid var(--ink);
-    border-radius: 11px;
-    background: #fff;
-    box-shadow: 4px 4px 0 var(--ink);
+    display: flex; flex-direction: column; align-items: center;
+    min-width: 70px; padding: 5px 11px;
+    border: 3px solid var(--ink); border-radius: 11px;
+    background: #fff; box-shadow: 4px 4px 0 var(--ink);
   }
   .hud__label { font-size: 9px; letter-spacing: 2px; font-weight: 700; opacity: 0.6; }
   .hud__value { font-size: 21px; font-weight: 700; line-height: 1.1; }
   .hud__item--combo .hud__value { color: var(--pop); }
   .hud__item--combo.is-hot {
-    background: var(--pop);
-    box-shadow: 4px 4px 0 var(--ink);
+    background: var(--pop); box-shadow: 4px 4px 0 var(--ink);
     animation: combo-pulse 0.3s ease;
   }
   .hud__item--combo.is-hot .hud__value,
@@ -82,11 +76,8 @@
   .board.shake { animation: board-shake 0.4s ease; }
   @keyframes board-shake {
     0%, 100% { transform: translateX(0); }
-    15% { transform: translateX(-8px); }
-    30% { transform: translateX(7px); }
-    45% { transform: translateX(-6px); }
-    60% { transform: translateX(4px); }
-    75% { transform: translateX(-2px); }
+    15% { transform: translateX(-8px); } 30% { transform: translateX(7px); }
+    45% { transform: translateX(-6px); } 60% { transform: translateX(4px); } 75% { transform: translateX(-2px); }
   }
   .clock { position: relative; display: flex; align-items: center; gap: var(--gap); user-select: none; }
   .clock__group { display: flex; gap: var(--gap); }
@@ -94,80 +85,48 @@
   .clock[data-seconds="false"] [data-sec-colon] { display: none; }
   .clock[data-format="24"] [data-ampm] { display: none; }
 
-  /* コロン */
   .clock__colon { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 0 2px; }
-  .clock__colon span {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--colon);
-    animation: blink 2s steps(1) infinite;
-  }
+  .clock__colon span { width: 9px; height: 9px; border-radius: 50%; background: var(--colon); animation: blink 2s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0.2; } }
 
-  /* AM/PM バッジ */
   .clock__ampm {
-    align-self: flex-end;
-    margin-left: 3px;
-    padding: 5px 7px;
-    font-weight: 700;
-    font-size: 15px;
-    letter-spacing: 1px;
-    color: #111;
-    background: var(--accent);
-    border-radius: 9px;
-    border: 2px solid var(--ink);
-    box-shadow: 0 4px 0 var(--ink);
-    transform: rotate(-3deg);
+    align-self: flex-end; margin-left: 3px; padding: 5px 7px;
+    font-weight: 700; font-size: 15px; letter-spacing: 1px; color: #111;
+    background: var(--accent); border-radius: 9px; border: 2px solid var(--ink);
+    box-shadow: 0 4px 0 var(--ink); transform: rotate(-3deg);
   }
 
   /* ---------- フリップカード ---------- */
   .flip {
-    position: relative;
-    width: var(--card-w);
-    height: var(--card-h);
-    font-size: var(--font-size);
-    font-weight: 700;
-    border-radius: var(--radius);
-    background: var(--card-bg);
-    cursor: pointer;
-    box-shadow:
-      0 18px 32px -12px rgba(0, 0, 0, 0.55),
-      0 6px 14px rgba(0, 0, 0, 0.18),
-      inset 0 1px 0 rgba(255, 255, 255, 0.14),
-      inset 0 -3px 8px rgba(0, 0, 0, 0.45);
+    position: relative; width: var(--card-w); height: var(--card-h);
+    font-size: var(--font-size); font-weight: 700; border-radius: var(--radius);
+    background: var(--card-bg); cursor: pointer;
+    box-shadow: 0 18px 32px -12px rgba(0,0,0,.55), 0 6px 14px rgba(0,0,0,.18),
+      inset 0 1px 0 rgba(255,255,255,.14), inset 0 -3px 8px rgba(0,0,0,.45);
     transition: transform 0.08s ease;
   }
   .flip:active { transform: translateY(2px); }
   .flip.is-poked { animation: poke 0.4s cubic-bezier(.36,.07,.19,.97); }
   @keyframes poke {
-    0%   { transform: scale(1) rotate(0); }
-    25%  { transform: scale(1.12, .9) rotate(-3deg); }
-    55%  { transform: scale(.94, 1.1) rotate(2deg); }
-    100% { transform: scale(1) rotate(0); }
+    0% { transform: scale(1) rotate(0); } 25% { transform: scale(1.12,.9) rotate(-3deg); }
+    55% { transform: scale(.94,1.1) rotate(2deg); } 100% { transform: scale(1) rotate(0); }
   }
   .flip .top, .flip .bottom, .flip .flip-top, .flip .flip-bottom {
     position: absolute; left: 0; width: 100%; height: 50%; overflow: hidden; backface-visibility: hidden;
   }
   .flip .top, .flip .flip-top {
-    top: 0;
-    border-radius: var(--radius) var(--radius) 0 0;
-    background: linear-gradient(180deg, var(--card-bg-2), var(--card-bg));
-    border-bottom: 1px solid var(--card-line);
+    top: 0; border-radius: var(--radius) var(--radius) 0 0;
+    background: linear-gradient(180deg, var(--card-bg-2), var(--card-bg)); border-bottom: 1px solid var(--card-line);
   }
   .flip .bottom, .flip .flip-bottom {
-    bottom: 0;
-    border-radius: 0 0 var(--radius) var(--radius);
+    bottom: 0; border-radius: 0 0 var(--radius) var(--radius);
     background: linear-gradient(180deg, var(--card-bg), var(--card-low));
   }
   .flip .top span, .flip .bottom span, .flip .flip-top span, .flip .flip-bottom span {
-    position: absolute; left: 0; width: 100%;
-    height: var(--card-h); line-height: var(--card-h);
-    text-align: center;
+    position: absolute; left: 0; width: 100%; height: var(--card-h); line-height: var(--card-h); text-align: center;
     background: linear-gradient(180deg, #ffffff 0%, #ededed 48%, #c4c4c4 100%);
-    -webkit-background-clip: text; background-clip: text;
-    color: transparent; -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.5));
   }
   .flip .top span, .flip .flip-top span { top: 0; }
   .flip .bottom span, .flip .flip-bottom span { bottom: 0; }
@@ -176,7 +135,6 @@
   @keyframes flip-down { to { transform: rotateX(-90deg); } }
   @keyframes flip-up   { to { transform: rotateX(0deg); } }
 
-  /* チャンスタイム（ゾロ目）でカードが光る */
   .clock.is-chance .flip { animation: chance-glow 0.6s ease-in-out infinite alternate; }
   @keyframes chance-glow {
     from { box-shadow: 0 18px 32px -12px rgba(0,0,0,.55), 0 0 0 0 var(--accent); }
@@ -186,22 +144,11 @@
   /* ---------- マスコット ---------- */
   .buddy { position: relative; width: 56px; cursor: pointer; flex: 0 0 auto; }
   .buddy__body { width: 100%; display: block; animation: idle 2.4s ease-in-out infinite; transform-origin: bottom center; }
-  @keyframes idle { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-4px) scale(1.01, .99); } }
+  @keyframes idle { 0%,100% { transform: translateY(0) scale(1,1); } 50% { transform: translateY(-4px) scale(1.01,.99); } }
   .buddy.is-happy .buddy__body { animation: happy 0.5s ease; }
-  @keyframes happy {
-    0%   { transform: translateY(0) scale(1); }
-    30%  { transform: translateY(-16px) scale(1.06, .94); }
-    60%  { transform: translateY(0) scale(.96, 1.04); }
-    100% { transform: translateY(0) scale(1); }
-  }
+  @keyframes happy { 0% { transform: translateY(0) scale(1);} 30% { transform: translateY(-16px) scale(1.06,.94);} 60% { transform: translateY(0) scale(.96,1.04);} 100% { transform: translateY(0) scale(1);} }
   .buddy.is-sad .buddy__body { animation: sad-shake 0.5s ease; }
-  @keyframes sad-shake {
-    0%, 100% { transform: translateX(0) rotate(0); }
-    20% { transform: translateX(-5px) rotate(-5deg); }
-    40% { transform: translateX(5px) rotate(5deg); }
-    60% { transform: translateX(-4px) rotate(-4deg); }
-    80% { transform: translateX(4px) rotate(4deg); }
-  }
+  @keyframes sad-shake { 0%,100% { transform: translateX(0) rotate(0);} 20% { transform: translateX(-5px) rotate(-5deg);} 40% { transform: translateX(5px) rotate(5deg);} 60% { transform: translateX(-4px) rotate(-4deg);} 80% { transform: translateX(4px) rotate(4deg);} }
   .buddy__shell { fill: var(--accent); stroke: var(--ink); stroke-width: 3; }
   .buddy__foot  { fill: var(--ink); }
   .buddy__cheek { fill: var(--pop); opacity: 0; transition: opacity .2s; }
@@ -212,36 +159,25 @@
   .buddy__mouth { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; transform-box: fill-box; transform-origin: center; transition: transform .15s; }
   .buddy.is-sad .buddy__mouth { transform: scaleY(-1) translateY(2px); }
 
-  /* 吹き出し */
   .buddy__bubble {
-    position: absolute; left: 100%; top: 50%;
-    transform: translate(6px, -50%);
-    white-space: nowrap; background: #fff;
-    border: 3px solid var(--ink); border-radius: 12px;
-    padding: 6px 10px; font-size: 12px; font-weight: 700;
-    box-shadow: 3px 3px 0 var(--ink);
-    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
-    z-index: 30;
+    position: absolute; left: 100%; top: 50%; transform: translate(6px,-50%);
+    white-space: nowrap; background: #fff; border: 3px solid var(--ink); border-radius: 12px;
+    padding: 6px 10px; font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 var(--ink);
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 30;
   }
-  .buddy__bubble::after {
-    content: ""; position: absolute; right: 100%; top: 50%;
-    transform: translateY(-50%); border: 7px solid transparent; border-right-color: var(--ink);
-  }
-  .buddy__bubble.show { opacity: 1; transform: translate(10px, -50%); }
+  .buddy__bubble::after { content: ""; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-right-color: var(--ink); }
+  .buddy__bubble.show { opacity: 1; transform: translate(10px,-50%); }
 
   /* ---------- コイン & 火花 ---------- */
   .coin {
     position: absolute; width: 38px; height: 38px; margin: -19px 0 0 -19px;
-    border-radius: 50%; background: var(--accent); border: 3px solid var(--ink);
-    color: var(--ink); font-size: 20px; font-weight: 700;
-    display: grid; place-items: center; cursor: pointer; z-index: 20;
+    border-radius: 50%; background: var(--accent); border: 3px solid var(--ink); color: var(--ink);
+    font-size: 20px; font-weight: 700; display: grid; place-items: center; cursor: pointer; z-index: 20;
     box-shadow: 0 3px 0 var(--ink); animation: coin-float 2.6s ease-in forwards;
   }
   .coin:active { transform: scale(.85); }
   @keyframes coin-float {
-    0%   { opacity: 0; transform: translateY(10px) scale(.5); }
-    12%  { opacity: 1; transform: translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateY(-150px) scale(.9); }
+    0% { opacity: 0; transform: translateY(10px) scale(.5);} 12% { opacity: 1; transform: translateY(0) scale(1);} 100% { opacity: 0; transform: translateY(-150px) scale(.9);}
   }
   .coin.is-gold { background: var(--accent); }
   .coin.is-pink { background: var(--pop); color: #fff; }
@@ -252,19 +188,59 @@
   .float-score.is-loss { color: var(--pop); }
   @keyframes float-up { to { transform: translateY(-46px); opacity: 0; } }
 
-  /* ---------- 実績トースト ---------- */
-  .toasts { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
-  .toast {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--ink); color: #fff; border-radius: 12px;
-    padding: 10px 14px; font-size: 13px; font-weight: 700;
-    box-shadow: 4px 4px 0 rgba(0,0,0,.2);
-    animation: toast-in .3s ease, toast-out .3s ease 3s forwards;
+  /* ---------- 共通ボタン ---------- */
+  .btn {
+    font-family: var(--ui-font); font-weight: 700; cursor: pointer;
+    border: 3px solid var(--ink); border-radius: 12px; background: #fff; color: var(--ink);
+    box-shadow: 4px 4px 0 var(--ink); padding: 8px 14px; font-size: 14px;
+    transition: transform .06s ease;
   }
-  .toast .emoji { font-size: 20px; }
-  .toast small { display: block; font-weight: 400; opacity: .8; }
-  @keyframes toast-in  { from { transform: translateX(120%); opacity: 0; } }
-  @keyframes toast-out { to   { transform: translateX(120%); opacity: 0; } }
+  .btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--ink); }
+  .btn--mtn { background: var(--accent); }
+  .btn--go { background: var(--good); color: #fff; }
+
+  /* ---------- モード選択 ---------- */
+  .sv__title { font-size: 18px; font-weight: 700; }
+  .sv__btns { display: flex; gap: 12px; }
+  .sv__btns .btn { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 100px; }
+  .sv__btns .btn small { font-weight: 400; font-size: 10px; opacity: .7; }
+  .sv__btns .btn[data-mode="easy"]   { background: #eaf7ef; }
+  .sv__btns .btn[data-mode="normal"] { background: #fff6da; }
+  .sv__btns .btn[data-mode="hard"]   { background: #ffe4e9; }
+
+  /* ---------- タイピング ---------- */
+  .tv { width: 560px; max-width: 92vw; }
+  .tv__top { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center; }
+  .tv__chip { border: 3px solid var(--ink); border-radius: 11px; padding: 4px 12px; font-size: 14px; font-weight: 700; box-shadow: 3px 3px 0 var(--ink); background: #fff; }
+  .tv__chip b { font-size: 20px; }
+  .tv__chip.is-low { background: var(--pop); color: #fff; }
+  .tv__top .btn { margin-left: auto; padding: 6px 10px; font-size: 12px; }
+
+  .tv__word { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 110px; justify-content: center; }
+  .tv__ja { font-size: 40px; font-weight: 700; letter-spacing: 2px; }
+  .tv__romaji { font-size: 30px; font-weight: 700; letter-spacing: 3px; }
+  .tv__romaji .done { color: var(--good); }
+  .tv__romaji .cur  { color: var(--ink); border-bottom: 4px solid var(--accent); }
+  .tv__romaji .todo { color: #bdbdbd; }
+  .tv.wrong .tv__romaji { animation: tv-shake .25s ease; }
+  @keyframes tv-shake { 0%,100% { transform: translateX(0);} 25% { transform: translateX(-6px);} 75% { transform: translateX(6px);} }
+
+  /* 山 */
+  .mtn { position: relative; width: 320px; max-width: 90vw; height: 130px; }
+  .mtn__bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mtn__flag { position: absolute; left: 70%; top: 2px; font-size: 20px; transform: translateX(-50%); }
+  .mtn__climber { position: absolute; font-size: 24px; transform: translate(-50%, 50%); transition: left .25s ease, bottom .25s ease; }
+  .mtn__rank { position: absolute; right: 4px; bottom: 4px; font-size: 13px; font-weight: 700; background: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 2px 8px; }
+
+  /* ---------- 結果 ---------- */
+  .rv { gap: 6px; }
+  .rv__emoji { font-size: 60px; line-height: 1; }
+  .rv__rank { font-size: 30px; font-weight: 700; }
+  .rv__rank b { color: var(--pop); font-size: 38px; }
+  .rv__sub { font-size: 15px; font-weight: 700; opacity: .8; }
+  .rv__btns { display: flex; gap: 10px; margin-top: 6px; }
+
+  .tv__hidden-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
 
   @media (prefers-reduced-motion: reduce) {
     .flip .flip-top, .flip .flip-bottom { animation-duration: .001s; }
@@ -273,84 +249,137 @@
   </style>
 </head>
 <body>
-  <!--
-    遊べるフリップ時計ウィジェット
-      data-format  : "12" | "24"   (12時間 / 24時間表記)
-      data-seconds : "true"|"false" (秒の表示)
-  -->
   <div class="fit" id="fit">
   <main class="stage" id="stage">
 
-    <header class="hud">
-      <div class="hud__item">
-        <span class="hud__label">SCORE</span>
-        <span class="hud__value" id="score">0</span>
-      </div>
-      <div class="hud__item hud__item--combo" id="comboBox">
-        <span class="hud__label">COMBO</span>
-        <span class="hud__value" id="combo">x1</span>
+    <!-- ============ 時計モード ============ -->
+    <section class="view" id="clockView">
+      <header class="hud">
+        <div class="hud__item">
+          <span class="hud__label">SCORE</span>
+          <span class="hud__value" id="score">0</span>
+        </div>
+        <div class="hud__item hud__item--combo" id="comboBox">
+          <span class="hud__label">COMBO</span>
+          <span class="hud__value" id="combo">x1</span>
+        </div>
+        <div class="buddy" id="buddy" title="クリックしてみて！">
+          <svg class="buddy__body" viewBox="0 0 100 100" aria-hidden="true">
+            <rect class="buddy__shell" x="14" y="20" width="72" height="64" rx="20" />
+            <circle class="buddy__cheek" cx="30" cy="58" r="6" />
+            <circle class="buddy__cheek" cx="70" cy="58" r="6" />
+            <g class="buddy__eyes"><circle class="eye" cx="38" cy="46" r="6" /><circle class="eye" cx="62" cy="46" r="6" /></g>
+            <path class="buddy__mouth" d="M42 62 Q50 70 58 62" fill="none" />
+            <rect class="buddy__foot" x="28" y="82" width="14" height="10" rx="4" />
+            <rect class="buddy__foot" x="58" y="82" width="14" height="10" rx="4" />
+          </svg>
+          <div class="buddy__bubble" id="bubble">タップして遊ぼう！</div>
+        </div>
+      </header>
+
+      <div class="board">
+        <div class="clock" id="clock" data-format="12" data-seconds="true">
+          <div class="clock__group">
+            <div class="flip" data-place="h-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+            <div class="flip" data-place="h-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+          </div>
+          <div class="clock__colon"><span></span><span></span></div>
+          <div class="clock__group">
+            <div class="flip" data-place="m-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+            <div class="flip" data-place="m-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+          </div>
+          <div class="clock__colon" data-sec-colon><span></span><span></span></div>
+          <div class="clock__group" data-sec>
+            <div class="flip" data-place="s-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+            <div class="flip" data-place="s-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
+          </div>
+          <div class="clock__ampm" data-ampm>PM</div>
+        </div>
       </div>
 
-      <div class="buddy" id="buddy" title="クリックしてみて！">
-        <svg class="buddy__body" viewBox="0 0 100 100" aria-hidden="true">
-          <rect class="buddy__shell" x="14" y="20" width="72" height="64" rx="20" />
-          <circle class="buddy__cheek" cx="30" cy="58" r="6" />
-          <circle class="buddy__cheek" cx="70" cy="58" r="6" />
-          <g class="buddy__eyes">
-            <circle class="eye" cx="38" cy="46" r="6" />
-            <circle class="eye" cx="62" cy="46" r="6" />
-          </g>
-          <path class="buddy__mouth" d="M42 62 Q50 70 58 62" fill="none" />
-          <rect class="buddy__foot" x="28" y="82" width="14" height="10" rx="4" />
-          <rect class="buddy__foot" x="58" y="82" width="14" height="10" rx="4" />
+      <button class="btn btn--mtn" id="mtnEnter">⛰️ タイピング登山であそぶ</button>
+    </section>
+
+    <!-- ============ モード選択 ============ -->
+    <section class="view" id="selectView" style="display:none">
+      <div class="sv__title">⛰️ コースを選んで登ろう</div>
+      <div class="sv__btns">
+        <button class="btn" data-mode="easy">EASY<small>90秒・かんたん</small></button>
+        <button class="btn" data-mode="normal">NORMAL<small>60秒・ふつう</small></button>
+        <button class="btn" data-mode="hard">HARD<small>45秒・むずかしい</small></button>
+      </div>
+      <button class="btn" id="svBack">← 時計に戻る</button>
+    </section>
+
+    <!-- ============ タイピング ============ -->
+    <section class="view tv" id="typingView" style="display:none">
+      <div class="tv__top">
+        <div class="tv__chip" id="tTimeChip">⏱️ <b id="tTime">60</b>s</div>
+        <div class="tv__chip">⛰️ <b id="tCount">0</b> 語</div>
+        <button class="btn" id="tQuit">やめる</button>
+      </div>
+      <div class="tv__word">
+        <div class="tv__ja" id="tJa">じゅんびちゅう</div>
+        <div class="tv__romaji" id="tRomaji"></div>
+      </div>
+      <div class="mtn" id="mtn">
+        <svg class="mtn__bg" viewBox="0 0 320 130" preserveAspectRatio="none" aria-hidden="true">
+          <polygon points="0,130 60,60 110,90 200,20 320,130" fill="#d7e8f2" stroke="#bcd5e4" stroke-width="2"/>
+          <polygon points="178,38 200,20 224,42 208,46 188,42" fill="#ffffff"/>
         </svg>
-        <div class="buddy__bubble" id="bubble">タップして遊ぼう！</div>
+        <div class="mtn__flag">🚩</div>
+        <div class="mtn__climber" id="climber">🧗</div>
+        <div class="mtn__rank" id="mtnRank">ふもと</div>
       </div>
-    </header>
+      <input class="tv__hidden-input" id="tInput" inputmode="latin" autocomplete="off" autocapitalize="none" aria-hidden="true" />
+    </section>
 
-    <div class="board">
-      <div class="clock" id="clock" data-format="12" data-seconds="true">
-        <div class="clock__group">
-          <div class="flip" data-place="h-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-          <div class="flip" data-place="h-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-        </div>
-
-        <div class="clock__colon"><span></span><span></span></div>
-
-        <div class="clock__group">
-          <div class="flip" data-place="m-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-          <div class="flip" data-place="m-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-        </div>
-
-        <div class="clock__colon" data-sec-colon><span></span><span></span></div>
-
-        <div class="clock__group" data-sec>
-          <div class="flip" data-place="s-tens"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-          <div class="flip" data-place="s-ones"><div class="top"><span>0</span></div><div class="bottom"><span>0</span></div></div>
-        </div>
-
-        <div class="clock__ampm" data-ampm>PM</div>
+    <!-- ============ 結果 ============ -->
+    <section class="view rv" id="resultView" style="display:none">
+      <div class="rv__emoji" id="rEmoji">🗻</div>
+      <div class="rv__rank"><b id="rRank">富士山</b>級！</div>
+      <div class="rv__sub"><span id="rCount">0</span>語クリア ／ 正確率 <span id="rAcc">100</span>%</div>
+      <div class="rv__btns">
+        <button class="btn btn--go" id="rRetry">もう一度</button>
+        <button class="btn" id="rSelect">コース選択</button>
+        <button class="btn" id="rHome">時計に戻る</button>
       </div>
-    </div>
+    </section>
 
   </main>
   </div>
-  <div class="toasts" id="toasts" aria-live="polite"></div>
 
   <script>
   /* ============================================================
-     Game Flip Clock
-     フリップ時計 + 遊び要素（コインキャッチ / スコア & コンボ /
-     実績 / 反応するマスコット / 触って気持ちいい演出 / ハズレ）
+     Game Flip Clock + タイピング登山
      ============================================================ */
   (function () {
     "use strict";
 
+    /* ====== 共通 ====== */
+    let appMode = "clock"; // "clock" | "typing"
+    let audioCtx = null;
+    function beep(freq, dur, type = "square", vol = 0.06) {
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = freq; gain.gain.value = vol;
+        osc.connect(gain).connect(audioCtx.destination);
+        const t = audioCtx.currentTime;
+        gain.gain.setValueAtTime(vol, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        osc.start(t); osc.stop(t + dur);
+      } catch (_) {}
+    }
+
+    /* ============================================================
+       時計モード（フリップ時計 + コインキャッチ）
+       ============================================================ */
     const clock   = document.getElementById("clock");
     const board   = document.querySelector(".board");
     const buddy   = document.getElementById("buddy");
     const bubble  = document.getElementById("bubble");
-    const toasts  = document.getElementById("toasts");
     const scoreEl = document.getElementById("score");
     const comboEl = document.getElementById("combo");
     const comboBox = document.getElementById("comboBox");
@@ -359,87 +388,36 @@
     const cards = {};
     clock.querySelectorAll(".flip").forEach((el) => (cards[el.dataset.place] = el));
 
-    const SAVE_KEY = "game-flip-clock";
-    let saved = {};
-    try { saved = JSON.parse(localStorage.getItem(SAVE_KEY) || "{}"); } catch (_) {}
-    let score = 0;
-    let combo = 1;
-    let chanceUntil = 0;
-    const unlocked = new Set(saved.achievements || []);
+    let score = 0, combo = 1, chanceUntil = 0;
 
-    const ACHIEVEMENTS = [
-      { id: "first",   emoji: "✨", name: "はじめの一歩",   desc: "コインを初キャッチ",       test: (s) => s.catches >= 1 },
-      { id: "combo5",  emoji: "🔥", name: "ノッてきた",       desc: "コンボ x5 達成",          test: (s) => s.maxCombo >= 5 },
-      { id: "combo10", emoji: "⚡", name: "止まらない",       desc: "コンボ x10 達成",         test: (s) => s.maxCombo >= 10 },
-      { id: "p100",    emoji: "🪙", name: "コインコレクター", desc: "100点 到達",              test: (s) => s.score >= 100 },
-      { id: "p1000",   emoji: "👑", name: "タイムマスター",   desc: "1000点 到達",             test: (s) => s.score >= 1000 },
-      { id: "chance",  emoji: "🎯", name: "ゾロ目ハンター",   desc: "チャンスタイムでキャッチ", test: (s) => s.chanceCatch >= 1 },
-      { id: "poke50",  emoji: "👆", name: "ぷにぷに中毒",     desc: "カードを50回つつく",      test: (s) => s.pokes >= 50 },
-      { id: "boom",    emoji: "💥", name: "ドンマイ！",       desc: "ハズレを踏んでしまう",     test: (s) => s.bombs >= 1 },
-      { id: "safe20",  emoji: "🍀", name: "慎重派",           desc: "ハズレ無しで20キャッチ",   test: (s) => s.catches >= 20 && s.bombs === 0 },
-    ];
-    const stats = { score: 0, catches: 0, maxCombo: 1, chanceCatch: 0, pokes: 0, bombs: 0 };
-
-    /* ---------- 効果音（WebAudio・ファイル不要） ---------- */
-    let audioCtx = null;
-    function beep(freq, dur, type = "square", vol = 0.06) {
-      try {
-        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        gain.gain.value = vol;
-        osc.connect(gain).connect(audioCtx.destination);
-        const t = audioCtx.currentTime;
-        gain.gain.setValueAtTime(vol, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        osc.start(t);
-        osc.stop(t + dur);
-      } catch (_) {}
-    }
-
-    /* ---------- フリップ描画 ---------- */
     function flip(card, next) {
       const topSpan = card.querySelector(".top span");
       const bottomSpan = card.querySelector(".bottom span");
       const current = topSpan.textContent;
       if (current === next) return;
-      topSpan.textContent = next;
-      bottomSpan.textContent = current;
-      const ft = document.createElement("div");
-      ft.className = "flip-top";
-      ft.innerHTML = "<span>" + current + "</span>";
-      const fb = document.createElement("div");
-      fb.className = "flip-bottom";
-      fb.innerHTML = "<span>" + next + "</span>";
+      topSpan.textContent = next; bottomSpan.textContent = current;
+      const ft = document.createElement("div"); ft.className = "flip-top"; ft.innerHTML = "<span>" + current + "</span>";
+      const fb = document.createElement("div"); fb.className = "flip-bottom"; fb.innerHTML = "<span>" + next + "</span>";
       card.append(ft, fb);
       ft.addEventListener("animationend", () => ft.remove());
       fb.addEventListener("animationend", () => { bottomSpan.textContent = next; fb.remove(); });
     }
     const setCard = (place, ch) => cards[place] && flip(cards[place], ch);
 
-    /* ---------- 時計の更新 ---------- */
     let lastSec = -1;
     function render() {
       const now = new Date();
       let h = now.getHours();
-      const m = now.getMinutes();
-      const s = now.getSeconds();
-      if (clock.dataset.format === "12") {
-        if (ampm) ampm.textContent = h >= 12 ? "PM" : "AM";
-        h = h % 12 || 12;
-      }
-      const hh = String(h).padStart(2, "0");
-      const mm = String(m).padStart(2, "0");
-      const ss = String(s).padStart(2, "0");
+      const m = now.getMinutes(), s = now.getSeconds();
+      if (clock.dataset.format === "12") { if (ampm) ampm.textContent = h >= 12 ? "PM" : "AM"; h = h % 12 || 12; }
+      const hh = String(h).padStart(2, "0"), mm = String(m).padStart(2, "0"), ss = String(s).padStart(2, "0");
       setCard("h-tens", hh[0]); setCard("h-ones", hh[1]);
       setCard("m-tens", mm[0]); setCard("m-ones", mm[1]);
       setCard("s-tens", ss[0]); setCard("s-ones", ss[1]);
       if (s !== lastSec) { lastSec = s; onTick(h, m, s, hh, mm, ss); }
     }
-
     function onTick(h, m, s, hh, mm, ss) {
+      if (appMode !== "clock") return; // タイピング中はコインを出さない
       const digits = hh + mm;
       const allSame = digits.split("").every((d) => d === digits[0]);
       const isStartChance = (m === 0 && s === 0) || (allSame && s === 0) || (hh === mm && s === 0);
@@ -448,7 +426,6 @@
       if (Date.now() <= chanceUntil) { spawnCoin(true); spawnCoin(true); }
       updateChanceVisual();
     }
-
     function startChance() {
       chanceUntil = Date.now() + 8000;
       say("チャンスタイム！🎯", 2500);
@@ -457,21 +434,15 @@
     }
     function updateChanceVisual() { clock.classList.toggle("is-chance", Date.now() <= chanceUntil); }
 
-    /* ---------- コイン ---------- */
     function spawnCoin(isChance = false) {
-      const placeKeys = Object.keys(cards).filter((k) => {
-        if (clock.dataset.seconds === "false" && k.startsWith("s-")) return false;
-        return true;
-      });
+      const placeKeys = Object.keys(cards).filter((k) => !(clock.dataset.seconds === "false" && k.startsWith("s-")));
       const anchor = cards[placeKeys[(Math.random() * placeKeys.length) | 0]];
       const a = anchor.getBoundingClientRect();
       const b = board.getBoundingClientRect();
-
       const roll = Math.random();
       let type = "gold";
       if (!isChance && roll < 0.22) type = "bad";
       else if (isChance ? roll < 0.5 : roll > 0.85) type = "pink";
-
       const coin = document.createElement("div");
       coin.className = "coin is-" + type;
       coin.textContent = { bad: "✕", pink: "★", gold: "●" }[type];
@@ -481,194 +452,243 @@
       coin.style.left = a.left - b.left + a.width / 2 + (Math.random() * 30 - 15) + "px";
       coin.style.top  = a.top  - b.top  + (Math.random() * 20) + "px";
       board.appendChild(coin);
-      coin.addEventListener("animationend", () => {
-        // 良いコインを取り逃して流れていったらコンボ終了（爆弾の見送りはセーフ）
-        if (!coin.dataset.dead && !coin.dataset.bad) missCombo();
-        coin.remove();
-      });
+      coin.addEventListener("animationend", () => { if (!coin.dataset.dead && !coin.dataset.bad) missCombo(); coin.remove(); });
       coin.addEventListener("pointerdown", (e) => { e.preventDefault(); collectCoin(coin); });
     }
-
     function collectCoin(coin) {
       if (coin.dataset.dead) return;
       coin.dataset.dead = "1";
-      const rect = coin.getBoundingClientRect();
-      const b = board.getBoundingClientRect();
-      const x = rect.left - b.left + rect.width / 2;
-      const y = rect.top - b.top + rect.height / 2;
-
+      const rect = coin.getBoundingClientRect(), b = board.getBoundingClientRect();
+      const x = rect.left - b.left + rect.width / 2, y = rect.top - b.top + rect.height / 2;
       if (coin.dataset.bad) {
-        const loss = Math.min(score, 30);
-        addScore(-loss, x, y);
-        resetCombo();
-        burst(x, y, "#444");
-        sadBuddy();
-        shakeBoard();
-        say("ハズレ…！💥", 1600);
-        beep(140, 0.28, "sawtooth", 0.08);
-        stats.bombs++;
-        coin.remove();
-        checkAchievements();
-        return;
+        addScore(-Math.min(score, 30), x, y);
+        resetCombo(); burst(x, y, "#444"); sadBuddy(); shakeBoard();
+        say("ハズレ…！💥", 1600); beep(140, 0.28, "sawtooth", 0.08);
+        coin.remove(); return;
       }
-
       addScore(parseInt(coin.dataset.value, 10) * combo, x, y);
-      bumpCombo();
-      burst(x, y, coin.classList.contains("is-pink") ? "#ff5d73" : "#ffcf33");
-      happyBuddy();
-      beep(660 + combo * 40, 0.08, "square");
-      stats.catches++;
-      if (coin.dataset.chance) stats.chanceCatch++;
+      bumpCombo(); burst(x, y, coin.classList.contains("is-pink") ? "#ff5d73" : "#ffcf33");
+      happyBuddy(); beep(660 + combo * 40, 0.08, "square");
       coin.remove();
-      checkAchievements();
     }
-
-    /* ---------- スコア & コンボ ---------- */
     function addScore(amount, x, y) {
       score = Math.max(0, score + amount);
-      stats.score = score;
       scoreEl.textContent = score;
-      scoreEl.classList.remove("score-bump");
-      void scoreEl.offsetWidth;
-      scoreEl.classList.add("score-bump");
+      scoreEl.classList.remove("score-bump"); void scoreEl.offsetWidth; scoreEl.classList.add("score-bump");
       if (x != null && amount !== 0) {
         const f = document.createElement("div");
         f.className = "float-score" + (amount < 0 ? " is-loss" : "");
         f.textContent = (amount > 0 ? "+" : "") + amount;
-        f.style.left = x + "px";
-        f.style.top = y + "px";
-        board.appendChild(f);
-        f.addEventListener("animationend", () => f.remove());
+        f.style.left = x + "px"; f.style.top = y + "px";
+        board.appendChild(f); f.addEventListener("animationend", () => f.remove());
       }
     }
-
     function bumpCombo() {
-      combo++;
-      comboEl.textContent = "x" + combo;
-      stats.maxCombo = Math.max(stats.maxCombo, combo);
-      if (combo >= 3) {
-        comboBox.classList.remove("is-hot");
-        void comboBox.offsetWidth;
-        comboBox.classList.add("is-hot");
-      }
+      combo++; comboEl.textContent = "x" + combo;
+      if (combo >= 3) { comboBox.classList.remove("is-hot"); void comboBox.offsetWidth; comboBox.classList.add("is-hot"); }
     }
-    function resetCombo() {
-      combo = 1;
-      comboEl.textContent = "x1";
-      comboBox.classList.remove("is-hot");
-    }
-    function missCombo() {
-      if (combo > 1) say("見逃した… コンボ終了", 1400);
-      resetCombo();
-    }
+    function resetCombo() { combo = 1; comboEl.textContent = "x1"; comboBox.classList.remove("is-hot"); }
+    function missCombo() { if (combo > 1) say("見逃した… コンボ終了", 1400); resetCombo(); }
 
-    /* ---------- エフェクト ---------- */
     function burst(x, y, color) {
       for (let i = 0; i < 10; i++) {
-        const p = document.createElement("div");
-        p.className = "spark";
-        p.style.background = color;
-        p.style.left = x + "px";
-        p.style.top = y + "px";
-        const ang = (Math.PI * 2 * i) / 10 + Math.random();
-        const dist = 30 + Math.random() * 30;
+        const p = document.createElement("div"); p.className = "spark"; p.style.background = color;
+        p.style.left = x + "px"; p.style.top = y + "px";
+        const ang = (Math.PI * 2 * i) / 10 + Math.random(), dist = 30 + Math.random() * 30;
         p.style.setProperty("--dx", Math.cos(ang) * dist + "px");
         p.style.setProperty("--dy", Math.sin(ang) * dist + "px");
-        board.appendChild(p);
-        p.addEventListener("animationend", () => p.remove());
+        board.appendChild(p); p.addEventListener("animationend", () => p.remove());
       }
     }
-
     let bubbleTimer = null;
-    function say(text, ms = 1800) {
-      bubble.textContent = text;
-      bubble.classList.add("show");
-      clearTimeout(bubbleTimer);
-      bubbleTimer = setTimeout(() => bubble.classList.remove("show"), ms);
-    }
+    function say(text, ms = 1800) { bubble.textContent = text; bubble.classList.add("show"); clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => bubble.classList.remove("show"), ms); }
     let happyTimer = null;
-    function happyBuddy() {
-      buddy.classList.remove("is-happy", "is-sad");
-      void buddy.offsetWidth;
-      buddy.classList.add("is-happy");
-      clearTimeout(happyTimer);
-      happyTimer = setTimeout(() => buddy.classList.remove("is-happy"), 500);
-    }
+    function happyBuddy() { buddy.classList.remove("is-happy", "is-sad"); void buddy.offsetWidth; buddy.classList.add("is-happy"); clearTimeout(happyTimer); happyTimer = setTimeout(() => buddy.classList.remove("is-happy"), 500); }
     let sadTimer = null;
-    function sadBuddy() {
-      buddy.classList.remove("is-happy", "is-sad");
-      void buddy.offsetWidth;
-      buddy.classList.add("is-sad");
-      clearTimeout(sadTimer);
-      sadTimer = setTimeout(() => buddy.classList.remove("is-sad"), 700);
-    }
+    function sadBuddy() { buddy.classList.remove("is-happy", "is-sad"); void buddy.offsetWidth; buddy.classList.add("is-sad"); clearTimeout(sadTimer); sadTimer = setTimeout(() => buddy.classList.remove("is-sad"), 700); }
     let shakeTimer = null;
-    function shakeBoard() {
-      board.classList.remove("shake");
-      void board.offsetWidth;
-      board.classList.add("shake");
-      clearTimeout(shakeTimer);
-      shakeTimer = setTimeout(() => board.classList.remove("shake"), 400);
-    }
+    function shakeBoard() { board.classList.remove("shake"); void board.offsetWidth; board.classList.add("shake"); clearTimeout(shakeTimer); shakeTimer = setTimeout(() => board.classList.remove("shake"), 400); }
 
-    /* ---------- カードを「つつく」 ---------- */
     Object.values(cards).forEach((card) => {
       card.addEventListener("pointerdown", () => {
-        card.classList.remove("is-poked");
-        void card.offsetWidth;
-        card.classList.add("is-poked");
-        const r = card.getBoundingClientRect();
-        const b = board.getBoundingClientRect();
+        card.classList.remove("is-poked"); void card.offsetWidth; card.classList.add("is-poked");
+        const r = card.getBoundingClientRect(), b = board.getBoundingClientRect();
         burst(r.left - b.left + r.width / 2, r.top - b.top + r.height / 2, "#bbbbbb");
         beep(220 + Math.random() * 60, 0.05, "triangle", 0.04);
-        stats.pokes++;
-        checkAchievements();
       });
     });
-
     buddy.addEventListener("pointerdown", () => {
       happyBuddy();
       const lines = ["やっほー！", "いまは " + clock.querySelector('[data-place="h-tens"] .top span').textContent + "時台！", "コイン集めよ！", "ぷにっ"];
-      say(lines[(Math.random() * lines.length) | 0]);
-      beep(520, 0.07, "sine", 0.05);
+      say(lines[(Math.random() * lines.length) | 0]); beep(520, 0.07, "sine", 0.05);
     });
 
-    /* ---------- 実績 ---------- */
-    function checkAchievements() {
-      ACHIEVEMENTS.forEach((a) => {
-        if (!unlocked.has(a.id) && a.test(stats)) {
-          unlocked.add(a.id);
-          toast(a);
-          persist();
-        }
-      });
-    }
-    function toast(a) {
-      const el = document.createElement("div");
-      el.className = "toast";
-      el.innerHTML = '<span class="emoji">' + a.emoji + '</span><span>実績解除！<small>' + a.name + " — " + a.desc + "</small></span>";
-      toasts.appendChild(el);
-      beep(784, 0.1); setTimeout(() => beep(1046, 0.14), 110);
-      setTimeout(() => el.remove(), 3500);
+    /* ============================================================
+       タイピング登山モード
+       ============================================================ */
+    const MODES = {
+      easy:   { time: 90, label: "EASY" },
+      normal: { time: 60, label: "NORMAL" },
+      hard:   { time: 45, label: "HARD" },
+    };
+    const WORDS = {
+      easy: [
+        {ja:"すし",ro:"sushi"},{ja:"ねこ",ro:"neko"},{ja:"いぬ",ro:"inu"},{ja:"やま",ro:"yama"},
+        {ja:"うみ",ro:"umi"},{ja:"そら",ro:"sora"},{ja:"はな",ro:"hana"},{ja:"ほし",ro:"hoshi"},
+        {ja:"つき",ro:"tsuki"},{ja:"みず",ro:"mizu"},{ja:"あめ",ro:"ame"},{ja:"ゆき",ro:"yuki"},
+        {ja:"とり",ro:"tori"},{ja:"くも",ro:"kumo"},{ja:"かさ",ro:"kasa"},{ja:"ふね",ro:"fune"},
+        {ja:"たまご",ro:"tamago"},{ja:"りんご",ro:"ringo"},{ja:"くるま",ro:"kuruma"},{ja:"えき",ro:"eki"},
+      ],
+      normal: [
+        {ja:"ともだち",ro:"tomodachi"},{ja:"がっこう",ro:"gakkou"},{ja:"でんしゃ",ro:"densha"},
+        {ja:"さくら",ro:"sakura"},{ja:"おんがく",ro:"ongaku"},{ja:"たべもの",ro:"tabemono"},
+        {ja:"てんき",ro:"tenki"},{ja:"かばん",ro:"kaban"},{ja:"えんぴつ",ro:"enpitsu"},
+        {ja:"としょかん",ro:"toshokan"},{ja:"みかん",ro:"mikan"},{ja:"ひこうき",ro:"hikouki"},
+        {ja:"せんせい",ro:"sensei"},{ja:"あさごはん",ro:"asagohan"},{ja:"でんわ",ro:"denwa"},
+        {ja:"しんぶん",ro:"shinbun"},{ja:"やさい",ro:"yasai"},{ja:"おかし",ro:"okashi"},
+      ],
+      hard: [
+        {ja:"しんかんせん",ro:"shinkansen"},{ja:"ありがとう",ro:"arigatou"},{ja:"とうきょう",ro:"toukyou"},
+        {ja:"じてんしゃ",ro:"jitensha"},{ja:"しゅくだい",ro:"shukudai"},{ja:"りょこう",ro:"ryokou"},
+        {ja:"ぎゅうにゅう",ro:"gyuunyuu"},{ja:"びじゅつかん",ro:"bijutsukan"},{ja:"こんにちは",ro:"konnichiha"},
+        {ja:"きょうしつ",ro:"kyoushitsu"},{ja:"きっぷ",ro:"kippu"},{ja:"しゃしん",ro:"shashin"},
+        {ja:"ひゃっかてん",ro:"hyakkaten"},{ja:"りゅうがく",ro:"ryuugaku"},{ja:"しゅっぱつ",ro:"shuppatsu"},
+        {ja:"ちきゅう",ro:"chikyuu"},{ja:"せんもんがっこう",ro:"senmongakkou"},{ja:"ぎんこう",ro:"ginkou"},
+      ],
+    };
+    // 級（登った語数で判定）
+    const RANKS = [
+      { min: 0,  name: "ふもと",     emoji: "🌱" },
+      { min: 3,  name: "丘",         emoji: "🌿" },
+      { min: 7,  name: "高尾山",     emoji: "🌲" },
+      { min: 12, name: "筑波山",     emoji: "⛰️" },
+      { min: 18, name: "富士山",     emoji: "🗻" },
+      { min: 25, name: "モンブラン", emoji: "🏔️" },
+      { min: 34, name: "エベレスト", emoji: "🏔️" },
+    ];
+    const SUMMIT = 34; // クライマーが頂上に届く語数
+    function rankFor(n) { let r = RANKS[0]; for (const x of RANKS) if (n >= x.min) r = x; return r; }
+
+    const views = ["clockView", "selectView", "typingView", "resultView"];
+    function showView(name) {
+      views.forEach((v) => (document.getElementById(v).style.display = v === name ? "" : "none"));
+      appMode = name === "typingView" ? "typing" : "clock";
+      applyFit();
     }
 
-    function persist() {
-      try {
-        localStorage.setItem(SAVE_KEY, JSON.stringify({ achievements: [...unlocked] }));
-      } catch (_) {}
+    const tJa = document.getElementById("tJa");
+    const tRomaji = document.getElementById("tRomaji");
+    const tTime = document.getElementById("tTime");
+    const tTimeChip = document.getElementById("tTimeChip");
+    const tCount = document.getElementById("tCount");
+    const climber = document.getElementById("climber");
+    const mtnRank = document.getElementById("mtnRank");
+    const typingView = document.getElementById("typingView");
+    const tInput = document.getElementById("tInput");
+
+    let T = null; // タイピング状態
+
+    function startTyping(modeKey) {
+      const cfg = MODES[modeKey];
+      T = { mode: modeKey, timeLeft: cfg.time, count: 0, hits: 0, miss: 0, target: "", pos: 0, timerId: null };
+      showView("typingView");
+      tTimeChip.classList.remove("is-low");
+      nextWord(); updateTop(); updateClimber();
+      try { tInput.focus(); } catch (_) {}
+      clearInterval(T.timerId);
+      T.timerId = setInterval(() => {
+        T.timeLeft--; updateTop();
+        if (T.timeLeft <= 5) tTimeChip.classList.add("is-low");
+        if (T.timeLeft <= 0) endTyping();
+      }, 1000);
+    }
+    function nextWord() {
+      const list = WORDS[T.mode];
+      const w = list[(Math.random() * list.length) | 0];
+      T.target = w.ro; T.pos = 0; tJa.textContent = w.ja;
+      renderWord();
+    }
+    function renderWord() {
+      let html = "";
+      for (let i = 0; i < T.target.length; i++) {
+        const cls = i < T.pos ? "done" : i === T.pos ? "cur" : "todo";
+        html += '<span class="' + cls + '">' + T.target[i] + "</span>";
+      }
+      tRomaji.innerHTML = html;
+    }
+    function updateTop() { tTime.textContent = Math.max(0, T.timeLeft); tCount.textContent = T.count; }
+    function updateClimber() {
+      const p = Math.min(1, T.count / SUMMIT);
+      climber.style.left = (8 + p * 60) + "%";
+      climber.style.bottom = (4 + p * 80) + "%";
+      const r = rankFor(T.count);
+      mtnRank.textContent = r.name + (T.count > 0 ? "級" : "");
+    }
+    function onTypeKey(ch) {
+      if (!T || appMode !== "typing") return;
+      if (ch === T.target[T.pos]) {
+        T.pos++; T.hits++;
+        beep(620 + T.pos * 30, 0.05, "square", 0.05);
+        if (T.pos >= T.target.length) {
+          T.count++; updateClimber();
+          beep(880, 0.08, "triangle", 0.06);
+          nextWord();
+        } else { renderWord(); }
+        updateTop();
+      } else {
+        T.miss++;
+        typingView.classList.remove("wrong"); void typingView.offsetWidth; typingView.classList.add("wrong");
+        beep(150, 0.1, "sawtooth", 0.05);
+      }
+    }
+    function endTyping() {
+      clearInterval(T.timerId);
+      const r = rankFor(T.count);
+      document.getElementById("rEmoji").textContent = r.emoji;
+      document.getElementById("rRank").textContent = r.name;
+      document.getElementById("rCount").textContent = T.count;
+      const total = T.hits + T.miss;
+      document.getElementById("rAcc").textContent = total ? Math.round((T.hits / total) * 100) : 100;
+      beep(660, 0.12); setTimeout(() => beep(990, 0.16), 130); setTimeout(() => beep(1320, 0.2), 280);
+      showView("resultView");
     }
 
-    /* ---------- 埋め込み幅にぴったり収める（全体を等倍スケール） ---------- */
+    // キー入力（PC）。tInput にフォーカスして on-screen キーボードも誘発（モバイル）
+    document.addEventListener("keydown", (e) => {
+      if (appMode !== "typing") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const ch = e.key.toLowerCase();
+      if (ch.length === 1 && /[a-z\-]/.test(ch)) { e.preventDefault(); onTypeKey(ch); }
+    });
+    // モバイル保険：input への入力も拾う
+    tInput.addEventListener("input", () => {
+      const v = tInput.value.toLowerCase();
+      for (const ch of v) if (/[a-z\-]/.test(ch)) onTypeKey(ch);
+      tInput.value = "";
+    });
+    typingView.addEventListener("pointerdown", () => { try { tInput.focus(); } catch (_) {} });
+
+    // ボタン配線
+    document.getElementById("mtnEnter").addEventListener("click", () => { showView("selectView"); beep(523, 0.08); });
+    document.getElementById("svBack").addEventListener("click", () => showView("clockView"));
+    document.querySelectorAll(".sv__btns .btn").forEach((b) => b.addEventListener("click", () => startTyping(b.dataset.mode)));
+    document.getElementById("tQuit").addEventListener("click", () => { if (T) clearInterval(T.timerId); showView("clockView"); });
+    document.getElementById("rRetry").addEventListener("click", () => startTyping(T.mode));
+    document.getElementById("rSelect").addEventListener("click", () => showView("selectView"));
+    document.getElementById("rHome").addEventListener("click", () => showView("clockView"));
+
+    /* ============================================================
+       埋め込み幅にぴったり収める（表示中ビューを等倍スケール）
+       ============================================================ */
     const fitBox = document.getElementById("fit");
     const stage  = document.getElementById("stage");
     function applyFit() {
       stage.style.transform = "none";
-      const w = stage.offsetWidth;
-      const h = stage.offsetHeight;
+      const w = stage.offsetWidth, h = stage.offsetHeight;
       const availW = document.documentElement.clientWidth || window.innerWidth;
       const availH = document.documentElement.clientHeight || window.innerHeight;
       let scale = Math.min(availW / w, availH / h);
-      scale = Math.max(0.1, Math.min(scale, 1.6)); // 拡大しすぎ防止
+      scale = Math.max(0.1, Math.min(scale, 1.6));
       stage.style.transform = "scale(" + scale + ")";
       fitBox.style.width = w * scale + "px";
       fitBox.style.height = h * scale + "px";
@@ -676,10 +696,7 @@
     window.addEventListener("resize", applyFit);
     window.addEventListener("load", applyFit);
 
-    /* ---------- 起動 ---------- */
-    render();
-    applyFit();
-    setInterval(render, 250);
+    render(); applyFit(); setInterval(render, 250);
   })();
   </script>
 </body>
