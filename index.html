@@ -99,13 +99,10 @@
     transform-origin: top center; animation: flipIn .35s ease backwards;
     transition: box-shadow .12s, transform .08s;
   }
-  .modecard b { font-size: 30px; font-weight: 700; letter-spacing: 3px; }
+  .modecard b { font-size: 30px; font-weight: 700; letter-spacing: 3px; color: #fff; }
   .modecard small { font-size: 13px; opacity: .55; letter-spacing: 1px; }
   .modecard:hover { box-shadow: 0 0 0 3px var(--accent), 0 18px 32px -12px rgba(0,0,0,.5); }
   .modecard:active { transform: translateY(2px); }
-  .modecard[data-mode="easy"] b   { color: #7fe7c4; }
-  .modecard[data-mode="normal"] b { color: var(--accent); }
-  .modecard[data-mode="hard"] b   { color: var(--bad); }
   @keyframes flipIn { from { transform: rotateX(-90deg); opacity: 0; } to { transform: rotateX(0); opacity: 1; } }
 
   /* ---------- START / BACK ボタン（AMの下） ---------- */
@@ -137,8 +134,12 @@
   .tbar { display: flex; align-items: center; gap: 18px; font-size: 12px; letter-spacing: 2px; color: var(--sub); }
   .tbar b { color: var(--ink); font-size: 17px; letter-spacing: 1px; }
   .tbar #tTime.is-low { color: var(--bad); }
-  .tbar #tRank { color: var(--ink); font-weight: 700; }
   .tbar .linkbtn { margin-left: 4px; font-size: 14px; }
+  #tCombo.reset { animation: comboReset .3s ease; }
+  @keyframes comboReset { 0% { color: var(--bad); transform: scale(1.4); } 100% { color: var(--ink); transform: scale(1); } }
+  .trank { font-size: 13px; letter-spacing: 1px; color: var(--sub); }
+  .trank b { color: var(--ink); font-size: 18px; }
+  .trank #tRank { color: var(--ink); font-weight: 700; }
 
   .tja { font-size: 24px; font-weight: 700; letter-spacing: 4px; color: var(--ink); text-align: center; max-width: 92vw; }
 
@@ -170,6 +171,8 @@
   .res__tag { font-size: 11px; letter-spacing: 4px; color: var(--sub); font-weight: 700; }
   .res__rank { font-size: 30px; font-weight: 700; letter-spacing: 2px; }
   .res__rank b { font-size: 42px; color: var(--ink); }
+  .res__score { font-size: 20px; font-weight: 700; letter-spacing: 2px; color: var(--sub); }
+  .res__score span { color: var(--ink); font-size: 26px; }
   .res__sub { font-size: 13px; letter-spacing: 2px; color: var(--sub); }
   .res__sub span { color: var(--ink); font-weight: 700; }
   .res__btns { display: flex; gap: 10px; margin-top: 6px; }
@@ -210,9 +213,9 @@
           </div>
 
           <div class="modes" id="modes" style="display:none">
-            <button class="modecard" data-mode="easy"><b>EASY</b><small>45s ・ たんご</small></button>
-            <button class="modecard" data-mode="normal"><b>NORMAL</b><small>60s ・ たんご</small></button>
-            <button class="modecard" data-mode="hard"><b>HARD</b><small>90s ・ ことわざ</small></button>
+            <button class="modecard" data-mode="easy"><b>EASY</b><small>45s</small></button>
+            <button class="modecard" data-mode="normal"><b>NORMAL</b><small>60s</small></button>
+            <button class="modecard" data-mode="hard"><b>HARD</b><small>90s</small></button>
           </div>
         </div>
 
@@ -227,18 +230,19 @@
     <section class="view" id="typeView" style="display:none">
       <div class="tbar">
         <span>TIME <b id="tTime">60</b></span>
-        <span>WORDS <b id="tCount">0</b></span>
-        <span id="tRank">ふもと</span>
+        <span>SCORE <b id="tScore">0</b></span>
+        <span>COMBO <b id="tCombo">0</b></span>
         <button class="linkbtn" id="tQuit" title="やめる">✕</button>
       </div>
       <div class="tja" id="tJa">ready</div>
       <div class="lrow" id="lrow"></div>
+      <div class="trank"><b id="tAlt">0</b>m ・ <span id="tRank">ふもと</span></div>
       <div class="ascent">
         <div class="ascent__track">
           <div class="ascent__fill" id="ascentFill"></div>
           <div class="ascent__marker" id="marker">▲</div>
         </div>
-        <div class="ascent__labels"><span>ふもと</span><span>富士山</span><span>山頂</span></div>
+        <div class="ascent__labels"><span id="ascL">ふもと</span><span id="ascR">日和山 3m</span></div>
       </div>
       <input class="hidden-input" id="tInput" inputmode="latin" autocomplete="off" autocapitalize="none" aria-hidden="true" />
     </section>
@@ -246,8 +250,9 @@
     <!-- ============ 結果 ============ -->
     <section class="view" id="resView" style="display:none">
       <div class="res__tag">RESULT</div>
-      <div class="res__rank"><b id="rRank">富士山</b> 級</div>
-      <div class="res__sub">WORDS <span id="rCount">0</span> &nbsp;·&nbsp; ACC <span id="rAcc">100</span>%</div>
+      <div class="res__rank"><b id="rAlt">0</b>m <span id="rRank">ふもと</span>級</div>
+      <div class="res__score">SCORE <span id="rScore">0</span></div>
+      <div class="res__sub">入力スペル <span id="rTyped">0</span> &nbsp;·&nbsp; ミス <span id="rMiss">0</span></div>
       <div class="res__btns">
         <button class="btn" id="rRetry">RETRY</button>
         <button class="btn" id="rMode">COURSE</button>
@@ -339,13 +344,26 @@
         {ja:"ねこにこばん",ro:"nekonikoban"},
       ],
     };
+    // スペル1文字 = 1m 登る。実在の山（低山中心・約30種）を高さ順に
     const RANKS = [
-      { min: 0, name: "ふもと" }, { min: 3, name: "丘" }, { min: 7, name: "高尾山" },
-      { min: 12, name: "筑波山" }, { min: 18, name: "富士山" }, { min: 25, name: "モンブラン" },
-      { min: 34, name: "エベレスト" },
+      { m: 0,    name: "ふもと" },
+      { m: 3,    name: "日和山" },     { m: 5,    name: "天保山" },
+      { m: 6,    name: "弁天山" },     { m: 7,    name: "蘇鉄山" },
+      { m: 10,   name: "大潟富士" },   { m: 26,   name: "愛宕山" },
+      { m: 112,  name: "笠山" },       { m: 226,  name: "円山" },
+      { m: 292,  name: "屋島" },       { m: 334,  name: "函館山" },
+      { m: 342,  name: "若草山" },     { m: 422,  name: "讃岐富士" },
+      { m: 599,  name: "高尾山" },     { m: 634,  name: "弥彦山" },
+      { m: 848,  name: "比叡山" },     { m: 877,  name: "筑波山" },
+      { m: 924,  name: "開聞岳" },     { m: 931,  name: "六甲山" },
+      { m: 1117, name: "桜島" },       { m: 1212, name: "金時山" },
+      { m: 1406, name: "天城山" },     { m: 1592, name: "阿蘇山" },
+      { m: 1729, name: "大山" },       { m: 2568, name: "浅間山" },
+      { m: 3067, name: "御嶽山" },     { m: 3180, name: "槍ヶ岳" },
+      { m: 3193, name: "北岳" },       { m: 3776, name: "富士山" },
+      { m: 4810, name: "モンブラン" }, { m: 8849, name: "エベレスト" },
     ];
-    const SUMMIT = 34;
-    function rankFor(n) { let r = RANKS[0]; for (const x of RANKS) if (n >= x.min) r = x; return r; }
+    function rankIndex(m) { let idx = 0; for (let i = 0; i < RANKS.length; i++) if (m >= RANKS[i].m) idx = i; return idx; }
     // 文字数でカードサイズを調整（長文でも収まるように）
     function sizeFor(len) {
       if (len <= 7)  return [62, 94, 56, 7];
@@ -393,8 +411,12 @@
     const lrow = document.getElementById("lrow");
     const tJa = document.getElementById("tJa");
     const tTime = document.getElementById("tTime");
-    const tCount = document.getElementById("tCount");
+    const tScore = document.getElementById("tScore");
+    const tCombo = document.getElementById("tCombo");
+    const tAlt = document.getElementById("tAlt");
     const tRank = document.getElementById("tRank");
+    const ascL = document.getElementById("ascL");
+    const ascR = document.getElementById("ascR");
     const ascentFill = document.getElementById("ascentFill");
     const marker = document.getElementById("marker");
     const typeView = document.getElementById("typeView");
@@ -402,7 +424,7 @@
     let T = null;
 
     function startTyping(mode) {
-      T = { mode, timeLeft: MODES[mode].time, count: 0, hits: 0, miss: 0, target: "", pos: 0, cards: [], timerId: null };
+      T = { mode, timeLeft: MODES[mode].time, hits: 0, miss: 0, score: 0, combo: 0, target: "", pos: 0, cards: [], timerId: null };
       showView("typeView");
       nextWord(); updateTop(); updateAscent();
       try { tInput.focus(); } catch (_) {}
@@ -439,24 +461,36 @@
         else c.classList.add("todo");
       });
     }
-    function updateTop() { tTime.textContent = Math.max(0, T.timeLeft); tCount.textContent = T.count; tRank.textContent = rankFor(T.count).name; }
+    function updateTop() {
+      tTime.textContent = Math.max(0, T.timeLeft);
+      tScore.textContent = T.score;
+      tCombo.textContent = T.combo;
+    }
     function updateAscent() {
-      const p = Math.min(1, T.count / SUMMIT);
+      const m = T.hits;
+      const idx = rankIndex(m);
+      const cur = RANKS[idx], next = RANKS[idx + 1];
+      tAlt.textContent = m;
+      tRank.textContent = cur.name;
+      const p = next ? Math.min(1, (m - cur.m) / (next.m - cur.m)) : 1;
       ascentFill.style.width = (p * 100) + "%";
       marker.style.left = (p * 100) + "%";
+      ascL.textContent = cur.m > 0 ? cur.name + " " + cur.m + "m" : "ふもと";
+      ascR.textContent = next ? next.name + " " + next.m + "m" : "山頂";
     }
+    function flashCombo() { tCombo.classList.remove("reset"); void tCombo.offsetWidth; tCombo.classList.add("reset"); }
     function onKey(ch) {
       if (!T) return;
       if (ch === T.target[T.pos]) {
-        T.pos++; T.hits++;
-        beep(600 + T.pos * 24, 0.04, "square", 0.045);
-        if (T.pos >= T.target.length) {
-          T.count++; updateTop(); updateAscent();
-          beep(900, 0.08, "triangle", 0.06);
-          nextWord();
-        } else { paintCards(); }
+        T.pos++; T.hits++; T.combo++;
+        const mult = 1 + Math.floor((T.combo - 1) / 10); // 10連続ごとにボーナス倍率+1
+        T.score += 10 * mult;
+        updateTop(); updateAscent();
+        beep(600 + Math.min(T.combo, 24) * 16, 0.04, "square", 0.045);
+        if (T.pos >= T.target.length) { beep(900, 0.08, "triangle", 0.06); nextWord(); }
+        else { paintCards(); }
       } else {
-        T.miss++;
+        T.miss++; T.combo = 0; updateTop(); flashCombo();
         const c = T.cards[T.pos];
         if (c) { c.classList.remove("wrong"); void c.offsetWidth; c.classList.add("wrong"); }
         beep(150, 0.09, "sawtooth", 0.05);
@@ -464,10 +498,12 @@
     }
     function endTyping() {
       clearInterval(T.timerId);
-      document.getElementById("rRank").textContent = rankFor(T.count).name;
-      document.getElementById("rCount").textContent = T.count;
-      const total = T.hits + T.miss;
-      document.getElementById("rAcc").textContent = total ? Math.round((T.hits / total) * 100) : 100;
+      const idx = rankIndex(T.hits);
+      document.getElementById("rAlt").textContent = T.hits;
+      document.getElementById("rRank").textContent = RANKS[idx].name;
+      document.getElementById("rScore").textContent = T.score;
+      document.getElementById("rTyped").textContent = T.hits;
+      document.getElementById("rMiss").textContent = T.miss;
       beep(620, 0.12); setTimeout(() => beep(990, 0.16), 130); setTimeout(() => beep(1320, 0.2), 280);
       showView("resView");
     }
