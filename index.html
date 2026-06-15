@@ -3,113 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Game Flip Clock</title>
+  <title>Flip Clock / Typing Ascent</title>
   <style>
   /* ============================================================
-     Game Flip Clock  —  遊べるフリップ時計 + タイピング登山
+     Flip Clock  +  Typing Ascent（タイピング登山）
+     ------------------------------------------------------------
+     時計の数字カードがそのままスペル入力に変わるシステマチックUI
      ============================================================ */
   :root {
     --bg: #ffffff;
-    --ink: #1c1c1c;
-    --card-bg: #1c1c1c;
-    --card-bg-2: #2b2b2b;
-    --card-low: #141414;
-    --card-line: rgba(0, 0, 0, 0.55);
+    --ink: #15171c;
+    --sub: #8a8f99;
+    --line: #e6e8ec;
+    --card-bg: #16181d;
+    --card-bg-2: #23262d;
+    --card-low: #101216;
+    --card-line: rgba(0, 0, 0, 0.6);
     --accent: #ffcf33;
-    --pop: #ff5d73;
-    --good: #3ad29f;
-    --colon: #1c1c1c;
-    --radius: 13px;
+    --done: #2fd0a6;
+    --bad: #ff5d73;
+    --radius: 12px;
     --card-w: 84px;
     --card-h: 124px;
     --gap: 7px;
     --font-size: 86px;
     --flip-speed: 0.3s;
-    --ui-font: "Courier New", monospace;
+    --lw: 62px;
+    --lh: 94px;
+    --lf: 56px;
+    --mono: "SFMono-Regular", "Courier New", monospace;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--ui-font);
-    display: grid;
-    place-items: center;
-    overflow: hidden;
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+    font-family: var(--mono); display: grid; place-items: center; overflow: hidden;
   }
   .fit { display: block; }
   .stage {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    width: max-content;
-    transform-origin: top left;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    padding: 14px; width: max-content; transform-origin: top left;
   }
-  .view { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .view { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 
-  /* ---------- HUD（スコアパネル） ---------- */
-  .hud { display: flex; gap: 10px; align-items: center; }
-  .hud__item {
-    display: flex; flex-direction: column; align-items: center;
-    min-width: 70px; padding: 5px 11px;
-    border: 3px solid var(--ink); border-radius: 11px;
-    background: #fff; box-shadow: 4px 4px 0 var(--ink);
-  }
-  .hud__label { font-size: 9px; letter-spacing: 2px; font-weight: 700; opacity: 0.6; }
-  .hud__value { font-size: 21px; font-weight: 700; line-height: 1.1; }
-  .hud__item--combo .hud__value { color: var(--pop); }
-  .hud__item--combo.is-hot {
-    background: var(--pop); box-shadow: 4px 4px 0 var(--ink);
-    animation: combo-pulse 0.3s ease;
-  }
-  .hud__item--combo.is-hot .hud__value,
-  .hud__item--combo.is-hot .hud__label { color: #fff; }
-  @keyframes combo-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); } }
-  .score-bump { animation: bump 0.25s ease; }
-  @keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.25); color: var(--good); } 100% { transform: scale(1); } }
-
-  /* ---------- 時計まわり ---------- */
+  /* ---------- フリップ時計 ---------- */
   .board { position: relative; display: flex; align-items: flex-end; gap: 10px; }
-  .board.shake { animation: board-shake 0.4s ease; }
-  @keyframes board-shake {
-    0%, 100% { transform: translateX(0); }
-    15% { transform: translateX(-8px); } 30% { transform: translateX(7px); }
-    45% { transform: translateX(-6px); } 60% { transform: translateX(4px); } 75% { transform: translateX(-2px); }
-  }
   .clock { position: relative; display: flex; align-items: center; gap: var(--gap); user-select: none; }
   .clock__group { display: flex; gap: var(--gap); }
-  .clock[data-seconds="false"] [data-sec],
-  .clock[data-seconds="false"] [data-sec-colon] { display: none; }
-  .clock[data-format="24"] [data-ampm] { display: none; }
-
   .clock__colon { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 0 2px; }
-  .clock__colon span { width: 9px; height: 9px; border-radius: 50%; background: var(--colon); animation: blink 2s steps(1) infinite; }
+  .clock__colon span { width: 9px; height: 9px; border-radius: 50%; background: var(--ink); animation: blink 2s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0.2; } }
-
   .clock__ampm {
-    align-self: flex-end; margin-left: 3px; padding: 5px 7px;
-    font-weight: 700; font-size: 15px; letter-spacing: 1px; color: #111;
-    background: var(--accent); border-radius: 9px; border: 2px solid var(--ink);
-    box-shadow: 0 4px 0 var(--ink); transform: rotate(-3deg);
+    align-self: flex-end; margin-left: 3px; padding: 4px 7px; font-weight: 700;
+    font-size: 14px; letter-spacing: 1px; color: var(--ink);
+    border: 2px solid var(--ink); border-radius: 8px; transform: translateY(-6px);
   }
 
-  /* ---------- フリップカード ---------- */
   .flip {
     position: relative; width: var(--card-w); height: var(--card-h);
     font-size: var(--font-size); font-weight: 700; border-radius: var(--radius);
-    background: var(--card-bg); cursor: pointer;
-    box-shadow: 0 18px 32px -12px rgba(0,0,0,.55), 0 6px 14px rgba(0,0,0,.18),
-      inset 0 1px 0 rgba(255,255,255,.14), inset 0 -3px 8px rgba(0,0,0,.45);
-    transition: transform 0.08s ease;
-  }
-  .flip:active { transform: translateY(2px); }
-  .flip.is-poked { animation: poke 0.4s cubic-bezier(.36,.07,.19,.97); }
-  @keyframes poke {
-    0% { transform: scale(1) rotate(0); } 25% { transform: scale(1.12,.9) rotate(-3deg); }
-    55% { transform: scale(.94,1.1) rotate(2deg); } 100% { transform: scale(1) rotate(0); }
+    background: var(--card-bg);
+    box-shadow: 0 18px 32px -12px rgba(0,0,0,.5), 0 6px 14px rgba(0,0,0,.15),
+      inset 0 1px 0 rgba(255,255,255,.12), inset 0 -3px 8px rgba(0,0,0,.45);
   }
   .flip .top, .flip .bottom, .flip .flip-top, .flip .flip-bottom {
     position: absolute; left: 0; width: 100%; height: 50%; overflow: hidden; backface-visibility: hidden;
@@ -135,116 +89,84 @@
   @keyframes flip-down { to { transform: rotateX(-90deg); } }
   @keyframes flip-up   { to { transform: rotateX(0deg); } }
 
-  .clock.is-chance .flip { animation: chance-glow 0.6s ease-in-out infinite alternate; }
-  @keyframes chance-glow {
-    from { box-shadow: 0 18px 32px -12px rgba(0,0,0,.55), 0 0 0 0 var(--accent); }
-    to   { box-shadow: 0 18px 32px -12px rgba(0,0,0,.55), 0 0 0 5px var(--accent); }
+  /* ---------- 山アイコン（スタートボタン） ---------- */
+  .mtn-icon {
+    appearance: none; cursor: pointer; background: none; border: 2px solid var(--ink);
+    border-radius: 12px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 8px;
+    color: var(--ink); font-family: var(--mono); font-size: 11px; letter-spacing: 2px; font-weight: 700;
+    transition: background .15s, color .15s, transform .06s;
   }
+  .mtn-icon svg { width: 22px; height: 22px; display: block; }
+  .mtn-icon path { stroke: currentColor; stroke-width: 2; fill: none; stroke-linejoin: round; }
+  .mtn-icon:hover { background: var(--ink); color: #fff; }
+  .mtn-icon:active { transform: translateY(1px); }
 
-  /* ---------- マスコット ---------- */
-  .buddy { position: relative; width: 56px; cursor: pointer; flex: 0 0 auto; }
-  .buddy__body { width: 100%; display: block; animation: idle 2.4s ease-in-out infinite; transform-origin: bottom center; }
-  @keyframes idle { 0%,100% { transform: translateY(0) scale(1,1); } 50% { transform: translateY(-4px) scale(1.01,.99); } }
-  .buddy.is-happy .buddy__body { animation: happy 0.5s ease; }
-  @keyframes happy { 0% { transform: translateY(0) scale(1);} 30% { transform: translateY(-16px) scale(1.06,.94);} 60% { transform: translateY(0) scale(.96,1.04);} 100% { transform: translateY(0) scale(1);} }
-  .buddy.is-sad .buddy__body { animation: sad-shake 0.5s ease; }
-  @keyframes sad-shake { 0%,100% { transform: translateX(0) rotate(0);} 20% { transform: translateX(-5px) rotate(-5deg);} 40% { transform: translateX(5px) rotate(5deg);} 60% { transform: translateX(-4px) rotate(-4deg);} 80% { transform: translateX(4px) rotate(4deg);} }
-  .buddy__shell { fill: var(--accent); stroke: var(--ink); stroke-width: 3; }
-  .buddy__foot  { fill: var(--ink); }
-  .buddy__cheek { fill: var(--pop); opacity: 0; transition: opacity .2s; }
-  .buddy.is-happy .buddy__cheek { opacity: .8; }
-  .eye { fill: var(--ink); transform-box: fill-box; transform-origin: center; transition: transform .15s; }
-  .buddy.is-happy .eye { transform: scaleY(0.25); }
-  .buddy.is-sad .eye { transform: scale(1.3); }
-  .buddy__mouth { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; transform-box: fill-box; transform-origin: center; transition: transform .15s; }
-  .buddy.is-sad .buddy__mouth { transform: scaleY(-1) translateY(2px); }
-
-  .buddy__bubble {
-    position: absolute; left: 100%; top: 50%; transform: translate(6px,-50%);
-    white-space: nowrap; background: #fff; border: 3px solid var(--ink); border-radius: 12px;
-    padding: 6px 10px; font-size: 12px; font-weight: 700; box-shadow: 3px 3px 0 var(--ink);
-    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 30;
-  }
-  .buddy__bubble::after { content: ""; position: absolute; right: 100%; top: 50%; transform: translateY(-50%); border: 7px solid transparent; border-right-color: var(--ink); }
-  .buddy__bubble.show { opacity: 1; transform: translate(10px,-50%); }
-
-  /* ---------- コイン & 火花 ---------- */
-  .coin {
-    position: absolute; width: 38px; height: 38px; margin: -19px 0 0 -19px;
-    border-radius: 50%; background: var(--accent); border: 3px solid var(--ink); color: var(--ink);
-    font-size: 20px; font-weight: 700; display: grid; place-items: center; cursor: pointer; z-index: 20;
-    box-shadow: 0 3px 0 var(--ink); animation: coin-float 2.6s ease-in forwards;
-  }
-  .coin:active { transform: scale(.85); }
-  @keyframes coin-float {
-    0% { opacity: 0; transform: translateY(10px) scale(.5);} 12% { opacity: 1; transform: translateY(0) scale(1);} 100% { opacity: 0; transform: translateY(-150px) scale(.9);}
-  }
-  .coin.is-gold { background: var(--accent); }
-  .coin.is-pink { background: var(--pop); color: #fff; }
-  .coin.is-bad { background: #3a3a3a; color: #fff; }
-  .spark { position: absolute; width: 10px; height: 10px; border-radius: 2px; pointer-events: none; z-index: 19; animation: spark-fly .5s ease-out forwards; }
-  @keyframes spark-fly { to { transform: translate(var(--dx), var(--dy)) scale(0) rotate(180deg); opacity: 0; } }
-  .float-score { position: absolute; z-index: 25; font-weight: 700; font-size: 18px; color: var(--good); pointer-events: none; text-shadow: 1px 1px 0 #fff; animation: float-up .8s ease-out forwards; }
-  .float-score.is-loss { color: var(--pop); }
-  @keyframes float-up { to { transform: translateY(-46px); opacity: 0; } }
-
-  /* ---------- 共通ボタン ---------- */
+  /* ---------- 共通：システマチックなボタン ---------- */
   .btn {
-    font-family: var(--ui-font); font-weight: 700; cursor: pointer;
-    border: 3px solid var(--ink); border-radius: 12px; background: #fff; color: var(--ink);
-    box-shadow: 4px 4px 0 var(--ink); padding: 8px 14px; font-size: 14px;
-    transition: transform .06s ease;
+    appearance: none; font-family: var(--mono); font-weight: 700; cursor: pointer;
+    border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink);
+    padding: 9px 16px; font-size: 13px; letter-spacing: 1px; transition: background .12s, color .12s, transform .06s;
   }
-  .btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--ink); }
-  .btn--mtn { background: var(--accent); }
-  .btn--go { background: var(--good); color: #fff; }
+  .btn:hover { background: var(--ink); color: #fff; }
+  .btn:active { transform: translateY(1px); }
+  .btn small { display: block; font-weight: 400; font-size: 9px; letter-spacing: 1px; opacity: .6; margin-top: 2px; }
+  .btn:hover small { opacity: .85; }
+  .linkbtn { appearance: none; background: none; border: none; cursor: pointer; font-family: var(--mono);
+    font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--sub); padding: 4px 6px; }
+  .linkbtn:hover { color: var(--ink); }
 
   /* ---------- モード選択 ---------- */
-  .sv__title { font-size: 18px; font-weight: 700; }
-  .sv__btns { display: flex; gap: 12px; }
-  .sv__btns .btn { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 100px; }
-  .sv__btns .btn small { font-weight: 400; font-size: 10px; opacity: .7; }
-  .sv__btns .btn[data-mode="easy"]   { background: #eaf7ef; }
-  .sv__btns .btn[data-mode="normal"] { background: #fff6da; }
-  .sv__btns .btn[data-mode="hard"]   { background: #ffe4e9; }
+  .msel__title { font-size: 12px; letter-spacing: 3px; color: var(--sub); font-weight: 700; }
+  .msel__row { display: flex; gap: 12px; }
+  .msel__row .btn { min-width: 104px; }
 
   /* ---------- タイピング ---------- */
-  .tv { width: 560px; max-width: 92vw; }
-  .tv__top { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center; }
-  .tv__chip { border: 3px solid var(--ink); border-radius: 11px; padding: 4px 12px; font-size: 14px; font-weight: 700; box-shadow: 3px 3px 0 var(--ink); background: #fff; }
-  .tv__chip b { font-size: 20px; }
-  .tv__chip.is-low { background: var(--pop); color: #fff; }
-  .tv__top .btn { margin-left: auto; padding: 6px 10px; font-size: 12px; }
+  .tbar { display: flex; align-items: center; gap: 18px; font-size: 12px; letter-spacing: 2px; color: var(--sub); }
+  .tbar b { color: var(--ink); font-size: 17px; letter-spacing: 1px; }
+  .tbar .is-low { color: var(--bad); }
+  .tbar #tRank { color: var(--ink); font-weight: 700; }
+  .tbar .linkbtn { margin-left: 4px; font-size: 14px; }
 
-  .tv__word { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 110px; justify-content: center; }
-  .tv__ja { font-size: 40px; font-weight: 700; letter-spacing: 2px; }
-  .tv__romaji { font-size: 30px; font-weight: 700; letter-spacing: 3px; }
-  .tv__romaji .done { color: var(--good); }
-  .tv__romaji .cur  { color: var(--ink); border-bottom: 4px solid var(--accent); }
-  .tv__romaji .todo { color: #bdbdbd; }
-  .tv.wrong .tv__romaji { animation: tv-shake .25s ease; }
-  @keyframes tv-shake { 0%,100% { transform: translateX(0);} 25% { transform: translateX(-6px);} 75% { transform: translateX(6px);} }
+  .tja { font-size: 26px; font-weight: 700; letter-spacing: 6px; color: var(--ink); }
 
-  /* 山 */
-  .mtn { position: relative; width: 320px; max-width: 90vw; height: 130px; }
-  .mtn__bg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .mtn__flag { position: absolute; left: 70%; top: 2px; font-size: 20px; transform: translateX(-50%); }
-  .mtn__climber { position: absolute; font-size: 24px; transform: translate(-50%, 50%); transition: left .25s ease, bottom .25s ease; }
-  .mtn__rank { position: absolute; right: 4px; bottom: 4px; font-size: 13px; font-weight: 700; background: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 2px 8px; }
+  .lrow { display: flex; gap: var(--gap); }
+  .lcard {
+    position: relative; width: var(--lw); height: var(--lh); border-radius: var(--radius);
+    background: var(--card-bg); display: grid; place-items: center;
+    box-shadow: 0 14px 26px -12px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -3px 8px rgba(0,0,0,.45);
+    transition: box-shadow .12s, transform .12s;
+  }
+  .lcard span {
+    font-size: var(--lf); font-weight: 700; line-height: 1;
+    background: linear-gradient(180deg, #ffffff 0%, #e6e6e6 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent;
+  }
+  .lcard.todo span { opacity: .28; }
+  .lcard.cur { box-shadow: 0 0 0 3px var(--accent), 0 14px 26px -12px rgba(0,0,0,.5); }
+  .lcard.done span { background: linear-gradient(180deg, #4ff0c6, #1fb98c); -webkit-background-clip: text; background-clip: text; }
+  .lcard.wrong { animation: lshake .25s ease; }
+  @keyframes lshake { 0%,100% { transform: translateX(0);} 25% { transform: translateX(-5px);} 75% { transform: translateX(5px);} }
+
+  /* ---------- 登山プログレス ---------- */
+  .ascent { width: 460px; max-width: 88vw; }
+  .ascent__track { position: relative; height: 4px; background: var(--line); border-radius: 2px; }
+  .ascent__fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--ink); border-radius: 2px; transition: width .25s ease; }
+  .ascent__marker { position: absolute; top: -9px; left: 0; transform: translateX(-50%); font-size: 12px; color: var(--ink); transition: left .25s ease; }
+  .ascent__labels { display: flex; justify-content: space-between; margin-top: 6px; font-size: 10px; letter-spacing: 1px; color: var(--sub); }
 
   /* ---------- 結果 ---------- */
-  .rv { gap: 6px; }
-  .rv__emoji { font-size: 60px; line-height: 1; }
-  .rv__rank { font-size: 30px; font-weight: 700; }
-  .rv__rank b { color: var(--pop); font-size: 38px; }
-  .rv__sub { font-size: 15px; font-weight: 700; opacity: .8; }
-  .rv__btns { display: flex; gap: 10px; margin-top: 6px; }
+  .res__tag { font-size: 11px; letter-spacing: 4px; color: var(--sub); font-weight: 700; }
+  .res__rank { font-size: 30px; font-weight: 700; letter-spacing: 2px; }
+  .res__rank b { font-size: 42px; color: var(--ink); }
+  .res__sub { font-size: 13px; letter-spacing: 2px; color: var(--sub); }
+  .res__sub span { color: var(--ink); font-weight: 700; }
+  .res__btns { display: flex; gap: 10px; margin-top: 6px; }
 
-  .tv__hidden-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .hidden-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
 
   @media (prefers-reduced-motion: reduce) {
     .flip .flip-top, .flip .flip-bottom { animation-duration: .001s; }
-    .clock__colon span, .buddy__body { animation: none; }
+    .clock__colon span { animation: none; }
   }
   </style>
 </head>
@@ -252,31 +174,8 @@
   <div class="fit" id="fit">
   <main class="stage" id="stage">
 
-    <!-- ============ 時計モード ============ -->
+    <!-- ============ 時計 ============ -->
     <section class="view" id="clockView">
-      <header class="hud">
-        <div class="hud__item">
-          <span class="hud__label">SCORE</span>
-          <span class="hud__value" id="score">0</span>
-        </div>
-        <div class="hud__item hud__item--combo" id="comboBox">
-          <span class="hud__label">COMBO</span>
-          <span class="hud__value" id="combo">x1</span>
-        </div>
-        <div class="buddy" id="buddy" title="クリックしてみて！">
-          <svg class="buddy__body" viewBox="0 0 100 100" aria-hidden="true">
-            <rect class="buddy__shell" x="14" y="20" width="72" height="64" rx="20" />
-            <circle class="buddy__cheek" cx="30" cy="58" r="6" />
-            <circle class="buddy__cheek" cx="70" cy="58" r="6" />
-            <g class="buddy__eyes"><circle class="eye" cx="38" cy="46" r="6" /><circle class="eye" cx="62" cy="46" r="6" /></g>
-            <path class="buddy__mouth" d="M42 62 Q50 70 58 62" fill="none" />
-            <rect class="buddy__foot" x="28" y="82" width="14" height="10" rx="4" />
-            <rect class="buddy__foot" x="58" y="82" width="14" height="10" rx="4" />
-          </svg>
-          <div class="buddy__bubble" id="bubble">タップして遊ぼう！</div>
-        </div>
-      </header>
-
       <div class="board">
         <div class="clock" id="clock" data-format="12" data-seconds="true">
           <div class="clock__group">
@@ -297,52 +196,52 @@
         </div>
       </div>
 
-      <button class="btn btn--mtn" id="mtnEnter">⛰️ タイピング登山であそぶ</button>
+      <button class="mtn-icon" id="mtnBtn" title="タイピング登山スタート" aria-label="タイピング登山スタート">
+        <svg viewBox="0 0 24 24"><path d="M2 20 L9 7 L13 13 L17 5 L22 20 Z" /></svg>
+        START
+      </button>
     </section>
 
     <!-- ============ モード選択 ============ -->
-    <section class="view" id="selectView" style="display:none">
-      <div class="sv__title">⛰️ コースを選んで登ろう</div>
-      <div class="sv__btns">
-        <button class="btn" data-mode="easy">EASY<small>90秒・かんたん</small></button>
-        <button class="btn" data-mode="normal">NORMAL<small>60秒・ふつう</small></button>
-        <button class="btn" data-mode="hard">HARD<small>45秒・むずかしい</small></button>
+    <section class="view" id="modeView" style="display:none">
+      <div class="msel__title">SELECT COURSE</div>
+      <div class="msel__row">
+        <button class="btn" data-mode="easy">EASY<small>90s / かんたん</small></button>
+        <button class="btn" data-mode="normal">NORMAL<small>60s / ふつう</small></button>
+        <button class="btn" data-mode="hard">HARD<small>45s / むずかしい</small></button>
       </div>
-      <button class="btn" id="svBack">← 時計に戻る</button>
+      <button class="linkbtn" id="modeBack">← CLOCK</button>
     </section>
 
     <!-- ============ タイピング ============ -->
-    <section class="view tv" id="typingView" style="display:none">
-      <div class="tv__top">
-        <div class="tv__chip" id="tTimeChip">⏱️ <b id="tTime">60</b>s</div>
-        <div class="tv__chip">⛰️ <b id="tCount">0</b> 語</div>
-        <button class="btn" id="tQuit">やめる</button>
+    <section class="view" id="typeView" style="display:none">
+      <div class="tbar">
+        <span>TIME <b id="tTime">60</b></span>
+        <span>WORDS <b id="tCount">0</b></span>
+        <span id="tRank">ふもと</span>
+        <button class="linkbtn" id="tQuit" title="やめる">✕</button>
       </div>
-      <div class="tv__word">
-        <div class="tv__ja" id="tJa">じゅんびちゅう</div>
-        <div class="tv__romaji" id="tRomaji"></div>
+      <div class="tja" id="tJa">ready</div>
+      <div class="lrow" id="lrow"></div>
+      <div class="ascent">
+        <div class="ascent__track">
+          <div class="ascent__fill" id="ascentFill"></div>
+          <div class="ascent__marker" id="marker">▲</div>
+        </div>
+        <div class="ascent__labels"><span>ふもと</span><span>富士山</span><span>山頂</span></div>
       </div>
-      <div class="mtn" id="mtn">
-        <svg class="mtn__bg" viewBox="0 0 320 130" preserveAspectRatio="none" aria-hidden="true">
-          <polygon points="0,130 60,60 110,90 200,20 320,130" fill="#d7e8f2" stroke="#bcd5e4" stroke-width="2"/>
-          <polygon points="178,38 200,20 224,42 208,46 188,42" fill="#ffffff"/>
-        </svg>
-        <div class="mtn__flag">🚩</div>
-        <div class="mtn__climber" id="climber">🧗</div>
-        <div class="mtn__rank" id="mtnRank">ふもと</div>
-      </div>
-      <input class="tv__hidden-input" id="tInput" inputmode="latin" autocomplete="off" autocapitalize="none" aria-hidden="true" />
+      <input class="hidden-input" id="tInput" inputmode="latin" autocomplete="off" autocapitalize="none" aria-hidden="true" />
     </section>
 
     <!-- ============ 結果 ============ -->
-    <section class="view rv" id="resultView" style="display:none">
-      <div class="rv__emoji" id="rEmoji">🗻</div>
-      <div class="rv__rank"><b id="rRank">富士山</b>級！</div>
-      <div class="rv__sub"><span id="rCount">0</span>語クリア ／ 正確率 <span id="rAcc">100</span>%</div>
-      <div class="rv__btns">
-        <button class="btn btn--go" id="rRetry">もう一度</button>
-        <button class="btn" id="rSelect">コース選択</button>
-        <button class="btn" id="rHome">時計に戻る</button>
+    <section class="view" id="resView" style="display:none">
+      <div class="res__tag">RESULT</div>
+      <div class="res__rank"><b id="rRank">富士山</b> 級</div>
+      <div class="res__sub">WORDS <span id="rCount">0</span> &nbsp;·&nbsp; ACC <span id="rAcc">100</span>%</div>
+      <div class="res__btns">
+        <button class="btn" id="rRetry">RETRY</button>
+        <button class="btn" id="rMode">COURSE</button>
+        <button class="btn" id="rHome">CLOCK</button>
       </div>
     </section>
 
@@ -350,61 +249,39 @@
   </div>
 
   <script>
-  /* ============================================================
-     Game Flip Clock + タイピング登山
-     ============================================================ */
   (function () {
     "use strict";
 
-    /* ====== 共通 ====== */
-    let appMode = "clock"; // "clock" | "typing"
     let audioCtx = null;
-    function beep(freq, dur, type = "square", vol = 0.06) {
+    function beep(freq, dur, type = "square", vol = 0.05) {
       try {
         audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type; osc.frequency.value = freq; gain.gain.value = vol;
-        osc.connect(gain).connect(audioCtx.destination);
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = type; o.frequency.value = freq; g.gain.value = vol;
+        o.connect(g).connect(audioCtx.destination);
         const t = audioCtx.currentTime;
-        gain.gain.setValueAtTime(vol, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        osc.start(t); osc.stop(t + dur);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.start(t); o.stop(t + dur);
       } catch (_) {}
     }
 
-    /* ============================================================
-       時計モード（フリップ時計 + コインキャッチ）
-       ============================================================ */
-    const clock   = document.getElementById("clock");
-    const board   = document.querySelector(".board");
-    const buddy   = document.getElementById("buddy");
-    const bubble  = document.getElementById("bubble");
-    const scoreEl = document.getElementById("score");
-    const comboEl = document.getElementById("combo");
-    const comboBox = document.getElementById("comboBox");
-    const ampm    = clock.querySelector("[data-ampm]");
-
+    /* ---------- フリップ時計 ---------- */
+    const clock = document.getElementById("clock");
+    const ampm = clock.querySelector("[data-ampm]");
     const cards = {};
     clock.querySelectorAll(".flip").forEach((el) => (cards[el.dataset.place] = el));
-
-    let score = 0, combo = 1, chanceUntil = 0;
-
     function flip(card, next) {
-      const topSpan = card.querySelector(".top span");
-      const bottomSpan = card.querySelector(".bottom span");
-      const current = topSpan.textContent;
-      if (current === next) return;
-      topSpan.textContent = next; bottomSpan.textContent = current;
-      const ft = document.createElement("div"); ft.className = "flip-top"; ft.innerHTML = "<span>" + current + "</span>";
+      const ts = card.querySelector(".top span"), bs = card.querySelector(".bottom span");
+      const cur = ts.textContent;
+      if (cur === next) return;
+      ts.textContent = next; bs.textContent = cur;
+      const ft = document.createElement("div"); ft.className = "flip-top"; ft.innerHTML = "<span>" + cur + "</span>";
       const fb = document.createElement("div"); fb.className = "flip-bottom"; fb.innerHTML = "<span>" + next + "</span>";
       card.append(ft, fb);
       ft.addEventListener("animationend", () => ft.remove());
-      fb.addEventListener("animationend", () => { bottomSpan.textContent = next; fb.remove(); });
+      fb.addEventListener("animationend", () => { bs.textContent = next; fb.remove(); });
     }
-    const setCard = (place, ch) => cards[place] && flip(cards[place], ch);
-
-    let lastSec = -1;
+    const setCard = (p, ch) => cards[p] && flip(cards[p], ch);
     function render() {
       const now = new Date();
       let h = now.getHours();
@@ -414,123 +291,12 @@
       setCard("h-tens", hh[0]); setCard("h-ones", hh[1]);
       setCard("m-tens", mm[0]); setCard("m-ones", mm[1]);
       setCard("s-tens", ss[0]); setCard("s-ones", ss[1]);
-      if (s !== lastSec) { lastSec = s; onTick(h, m, s, hh, mm, ss); }
     }
-    function onTick(h, m, s, hh, mm, ss) {
-      if (appMode !== "clock") return; // タイピング中はコインを出さない
-      const digits = hh + mm;
-      const allSame = digits.split("").every((d) => d === digits[0]);
-      const isStartChance = (m === 0 && s === 0) || (allSame && s === 0) || (hh === mm && s === 0);
-      if (isStartChance) startChance();
-      if (Date.now() > chanceUntil && Math.random() < 0.45) spawnCoin();
-      if (Date.now() <= chanceUntil) { spawnCoin(true); spawnCoin(true); }
-      updateChanceVisual();
-    }
-    function startChance() {
-      chanceUntil = Date.now() + 8000;
-      say("チャンスタイム！🎯", 2500);
-      beep(880, 0.12); setTimeout(() => beep(1175, 0.16), 120);
-      updateChanceVisual();
-    }
-    function updateChanceVisual() { clock.classList.toggle("is-chance", Date.now() <= chanceUntil); }
-
-    function spawnCoin(isChance = false) {
-      const placeKeys = Object.keys(cards).filter((k) => !(clock.dataset.seconds === "false" && k.startsWith("s-")));
-      const anchor = cards[placeKeys[(Math.random() * placeKeys.length) | 0]];
-      const a = anchor.getBoundingClientRect();
-      const b = board.getBoundingClientRect();
-      const roll = Math.random();
-      let type = "gold";
-      if (!isChance && roll < 0.22) type = "bad";
-      else if (isChance ? roll < 0.5 : roll > 0.85) type = "pink";
-      const coin = document.createElement("div");
-      coin.className = "coin is-" + type;
-      coin.textContent = { bad: "✕", pink: "★", gold: "●" }[type];
-      coin.dataset.value = { bad: -30, pink: 50, gold: 10 }[type];
-      coin.dataset.bad = type === "bad" ? "1" : "";
-      coin.dataset.chance = isChance ? "1" : "";
-      coin.style.left = a.left - b.left + a.width / 2 + (Math.random() * 30 - 15) + "px";
-      coin.style.top  = a.top  - b.top  + (Math.random() * 20) + "px";
-      board.appendChild(coin);
-      coin.addEventListener("animationend", () => { if (!coin.dataset.dead && !coin.dataset.bad) missCombo(); coin.remove(); });
-      coin.addEventListener("pointerdown", (e) => { e.preventDefault(); collectCoin(coin); });
-    }
-    function collectCoin(coin) {
-      if (coin.dataset.dead) return;
-      coin.dataset.dead = "1";
-      const rect = coin.getBoundingClientRect(), b = board.getBoundingClientRect();
-      const x = rect.left - b.left + rect.width / 2, y = rect.top - b.top + rect.height / 2;
-      if (coin.dataset.bad) {
-        addScore(-Math.min(score, 30), x, y);
-        resetCombo(); burst(x, y, "#444"); sadBuddy(); shakeBoard();
-        say("ハズレ…！💥", 1600); beep(140, 0.28, "sawtooth", 0.08);
-        coin.remove(); return;
-      }
-      addScore(parseInt(coin.dataset.value, 10) * combo, x, y);
-      bumpCombo(); burst(x, y, coin.classList.contains("is-pink") ? "#ff5d73" : "#ffcf33");
-      happyBuddy(); beep(660 + combo * 40, 0.08, "square");
-      coin.remove();
-    }
-    function addScore(amount, x, y) {
-      score = Math.max(0, score + amount);
-      scoreEl.textContent = score;
-      scoreEl.classList.remove("score-bump"); void scoreEl.offsetWidth; scoreEl.classList.add("score-bump");
-      if (x != null && amount !== 0) {
-        const f = document.createElement("div");
-        f.className = "float-score" + (amount < 0 ? " is-loss" : "");
-        f.textContent = (amount > 0 ? "+" : "") + amount;
-        f.style.left = x + "px"; f.style.top = y + "px";
-        board.appendChild(f); f.addEventListener("animationend", () => f.remove());
-      }
-    }
-    function bumpCombo() {
-      combo++; comboEl.textContent = "x" + combo;
-      if (combo >= 3) { comboBox.classList.remove("is-hot"); void comboBox.offsetWidth; comboBox.classList.add("is-hot"); }
-    }
-    function resetCombo() { combo = 1; comboEl.textContent = "x1"; comboBox.classList.remove("is-hot"); }
-    function missCombo() { if (combo > 1) say("見逃した… コンボ終了", 1400); resetCombo(); }
-
-    function burst(x, y, color) {
-      for (let i = 0; i < 10; i++) {
-        const p = document.createElement("div"); p.className = "spark"; p.style.background = color;
-        p.style.left = x + "px"; p.style.top = y + "px";
-        const ang = (Math.PI * 2 * i) / 10 + Math.random(), dist = 30 + Math.random() * 30;
-        p.style.setProperty("--dx", Math.cos(ang) * dist + "px");
-        p.style.setProperty("--dy", Math.sin(ang) * dist + "px");
-        board.appendChild(p); p.addEventListener("animationend", () => p.remove());
-      }
-    }
-    let bubbleTimer = null;
-    function say(text, ms = 1800) { bubble.textContent = text; bubble.classList.add("show"); clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => bubble.classList.remove("show"), ms); }
-    let happyTimer = null;
-    function happyBuddy() { buddy.classList.remove("is-happy", "is-sad"); void buddy.offsetWidth; buddy.classList.add("is-happy"); clearTimeout(happyTimer); happyTimer = setTimeout(() => buddy.classList.remove("is-happy"), 500); }
-    let sadTimer = null;
-    function sadBuddy() { buddy.classList.remove("is-happy", "is-sad"); void buddy.offsetWidth; buddy.classList.add("is-sad"); clearTimeout(sadTimer); sadTimer = setTimeout(() => buddy.classList.remove("is-sad"), 700); }
-    let shakeTimer = null;
-    function shakeBoard() { board.classList.remove("shake"); void board.offsetWidth; board.classList.add("shake"); clearTimeout(shakeTimer); shakeTimer = setTimeout(() => board.classList.remove("shake"), 400); }
-
-    Object.values(cards).forEach((card) => {
-      card.addEventListener("pointerdown", () => {
-        card.classList.remove("is-poked"); void card.offsetWidth; card.classList.add("is-poked");
-        const r = card.getBoundingClientRect(), b = board.getBoundingClientRect();
-        burst(r.left - b.left + r.width / 2, r.top - b.top + r.height / 2, "#bbbbbb");
-        beep(220 + Math.random() * 60, 0.05, "triangle", 0.04);
-      });
-    });
-    buddy.addEventListener("pointerdown", () => {
-      happyBuddy();
-      const lines = ["やっほー！", "いまは " + clock.querySelector('[data-place="h-tens"] .top span').textContent + "時台！", "コイン集めよ！", "ぷにっ"];
-      say(lines[(Math.random() * lines.length) | 0]); beep(520, 0.07, "sine", 0.05);
-    });
 
     /* ============================================================
-       タイピング登山モード
+       タイピング登山
        ============================================================ */
-    const MODES = {
-      easy:   { time: 90, label: "EASY" },
-      normal: { time: 60, label: "NORMAL" },
-      hard:   { time: 45, label: "HARD" },
-    };
+    const MODES = { easy: { time: 90 }, normal: { time: 60 }, hard: { time: 45 } };
     const WORDS = {
       easy: [
         {ja:"すし",ro:"sushi"},{ja:"ねこ",ro:"neko"},{ja:"いぬ",ro:"inu"},{ja:"やま",ro:"yama"},
@@ -553,52 +319,43 @@
         {ja:"ぎゅうにゅう",ro:"gyuunyuu"},{ja:"びじゅつかん",ro:"bijutsukan"},{ja:"こんにちは",ro:"konnichiha"},
         {ja:"きょうしつ",ro:"kyoushitsu"},{ja:"きっぷ",ro:"kippu"},{ja:"しゃしん",ro:"shashin"},
         {ja:"ひゃっかてん",ro:"hyakkaten"},{ja:"りゅうがく",ro:"ryuugaku"},{ja:"しゅっぱつ",ro:"shuppatsu"},
-        {ja:"ちきゅう",ro:"chikyuu"},{ja:"せんもんがっこう",ro:"senmongakkou"},{ja:"ぎんこう",ro:"ginkou"},
+        {ja:"ちきゅう",ro:"chikyuu"},{ja:"ぎんこう",ro:"ginkou"},{ja:"しゃちょう",ro:"shachou"},
       ],
     };
-    // 級（登った語数で判定）
     const RANKS = [
-      { min: 0,  name: "ふもと",     emoji: "🌱" },
-      { min: 3,  name: "丘",         emoji: "🌿" },
-      { min: 7,  name: "高尾山",     emoji: "🌲" },
-      { min: 12, name: "筑波山",     emoji: "⛰️" },
-      { min: 18, name: "富士山",     emoji: "🗻" },
-      { min: 25, name: "モンブラン", emoji: "🏔️" },
-      { min: 34, name: "エベレスト", emoji: "🏔️" },
+      { min: 0,  name: "ふもと" }, { min: 3,  name: "丘" }, { min: 7,  name: "高尾山" },
+      { min: 12, name: "筑波山" }, { min: 18, name: "富士山" }, { min: 25, name: "モンブラン" },
+      { min: 34, name: "エベレスト" },
     ];
-    const SUMMIT = 34; // クライマーが頂上に届く語数
+    const SUMMIT = 34;
     function rankFor(n) { let r = RANKS[0]; for (const x of RANKS) if (n >= x.min) r = x; return r; }
 
-    const views = ["clockView", "selectView", "typingView", "resultView"];
+    const views = ["clockView", "modeView", "typeView", "resView"];
     function showView(name) {
       views.forEach((v) => (document.getElementById(v).style.display = v === name ? "" : "none"));
-      appMode = name === "typingView" ? "typing" : "clock";
       applyFit();
     }
 
+    const lrow = document.getElementById("lrow");
     const tJa = document.getElementById("tJa");
-    const tRomaji = document.getElementById("tRomaji");
     const tTime = document.getElementById("tTime");
-    const tTimeChip = document.getElementById("tTimeChip");
     const tCount = document.getElementById("tCount");
-    const climber = document.getElementById("climber");
-    const mtnRank = document.getElementById("mtnRank");
-    const typingView = document.getElementById("typingView");
+    const tRank = document.getElementById("tRank");
+    const ascentFill = document.getElementById("ascentFill");
+    const marker = document.getElementById("marker");
+    const typeView = document.getElementById("typeView");
     const tInput = document.getElementById("tInput");
+    let T = null;
 
-    let T = null; // タイピング状態
-
-    function startTyping(modeKey) {
-      const cfg = MODES[modeKey];
-      T = { mode: modeKey, timeLeft: cfg.time, count: 0, hits: 0, miss: 0, target: "", pos: 0, timerId: null };
-      showView("typingView");
-      tTimeChip.classList.remove("is-low");
-      nextWord(); updateTop(); updateClimber();
+    function startTyping(mode) {
+      T = { mode, timeLeft: MODES[mode].time, count: 0, hits: 0, miss: 0, target: "", pos: 0, cards: [], timerId: null };
+      showView("typeView");
+      nextWord(); updateTop(); updateAscent();
       try { tInput.focus(); } catch (_) {}
       clearInterval(T.timerId);
       T.timerId = setInterval(() => {
         T.timeLeft--; updateTop();
-        if (T.timeLeft <= 5) tTimeChip.classList.add("is-low");
+        tTime.classList.toggle("is-low", T.timeLeft <= 5);
         if (T.timeLeft <= 0) endTyping();
       }, 1000);
     }
@@ -606,82 +363,80 @@
       const list = WORDS[T.mode];
       const w = list[(Math.random() * list.length) | 0];
       T.target = w.ro; T.pos = 0; tJa.textContent = w.ja;
-      renderWord();
-    }
-    function renderWord() {
-      let html = "";
-      for (let i = 0; i < T.target.length; i++) {
-        const cls = i < T.pos ? "done" : i === T.pos ? "cur" : "todo";
-        html += '<span class="' + cls + '">' + T.target[i] + "</span>";
+      lrow.innerHTML = ""; T.cards = [];
+      for (let i = 0; i < w.ro.length; i++) {
+        const c = document.createElement("div");
+        c.className = "lcard todo";
+        c.innerHTML = "<span>" + w.ro[i] + "</span>";
+        lrow.appendChild(c); T.cards.push(c);
       }
-      tRomaji.innerHTML = html;
+      paintCards();
     }
-    function updateTop() { tTime.textContent = Math.max(0, T.timeLeft); tCount.textContent = T.count; }
-    function updateClimber() {
+    function paintCards() {
+      T.cards.forEach((c, i) => {
+        c.classList.remove("todo", "cur", "done");
+        if (i < T.pos) c.classList.add("done");
+        else if (i === T.pos) c.classList.add("cur");
+        else c.classList.add("todo");
+      });
+    }
+    function updateTop() { tTime.textContent = Math.max(0, T.timeLeft); tCount.textContent = T.count; tRank.textContent = rankFor(T.count).name; }
+    function updateAscent() {
       const p = Math.min(1, T.count / SUMMIT);
-      climber.style.left = (8 + p * 60) + "%";
-      climber.style.bottom = (4 + p * 80) + "%";
-      const r = rankFor(T.count);
-      mtnRank.textContent = r.name + (T.count > 0 ? "級" : "");
+      ascentFill.style.width = (p * 100) + "%";
+      marker.style.left = (p * 100) + "%";
     }
-    function onTypeKey(ch) {
-      if (!T || appMode !== "typing") return;
+    function onKey(ch) {
+      if (!T) return;
       if (ch === T.target[T.pos]) {
         T.pos++; T.hits++;
-        beep(620 + T.pos * 30, 0.05, "square", 0.05);
+        beep(600 + T.pos * 28, 0.04, "square", 0.045);
         if (T.pos >= T.target.length) {
-          T.count++; updateClimber();
-          beep(880, 0.08, "triangle", 0.06);
+          T.count++; updateTop(); updateAscent();
+          beep(900, 0.08, "triangle", 0.06);
           nextWord();
-        } else { renderWord(); }
-        updateTop();
+        } else { paintCards(); }
       } else {
         T.miss++;
-        typingView.classList.remove("wrong"); void typingView.offsetWidth; typingView.classList.add("wrong");
-        beep(150, 0.1, "sawtooth", 0.05);
+        const c = T.cards[T.pos];
+        if (c) { c.classList.remove("wrong"); void c.offsetWidth; c.classList.add("wrong"); }
+        beep(150, 0.09, "sawtooth", 0.05);
       }
     }
     function endTyping() {
       clearInterval(T.timerId);
-      const r = rankFor(T.count);
-      document.getElementById("rEmoji").textContent = r.emoji;
-      document.getElementById("rRank").textContent = r.name;
+      document.getElementById("rRank").textContent = rankFor(T.count).name;
       document.getElementById("rCount").textContent = T.count;
       const total = T.hits + T.miss;
       document.getElementById("rAcc").textContent = total ? Math.round((T.hits / total) * 100) : 100;
-      beep(660, 0.12); setTimeout(() => beep(990, 0.16), 130); setTimeout(() => beep(1320, 0.2), 280);
-      showView("resultView");
+      beep(620, 0.12); setTimeout(() => beep(990, 0.16), 130); setTimeout(() => beep(1320, 0.2), 280);
+      showView("resView");
     }
 
-    // キー入力（PC）。tInput にフォーカスして on-screen キーボードも誘発（モバイル）
     document.addEventListener("keydown", (e) => {
-      if (appMode !== "typing") return;
+      if (typeView.style.display === "none") return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const ch = e.key.toLowerCase();
-      if (ch.length === 1 && /[a-z\-]/.test(ch)) { e.preventDefault(); onTypeKey(ch); }
+      if (ch.length === 1 && /[a-z\-]/.test(ch)) { e.preventDefault(); onKey(ch); }
     });
-    // モバイル保険：input への入力も拾う
     tInput.addEventListener("input", () => {
       const v = tInput.value.toLowerCase();
-      for (const ch of v) if (/[a-z\-]/.test(ch)) onTypeKey(ch);
+      for (const ch of v) if (/[a-z\-]/.test(ch)) onKey(ch);
       tInput.value = "";
     });
-    typingView.addEventListener("pointerdown", () => { try { tInput.focus(); } catch (_) {} });
+    typeView.addEventListener("pointerdown", () => { try { tInput.focus(); } catch (_) {} });
 
-    // ボタン配線
-    document.getElementById("mtnEnter").addEventListener("click", () => { showView("selectView"); beep(523, 0.08); });
-    document.getElementById("svBack").addEventListener("click", () => showView("clockView"));
-    document.querySelectorAll(".sv__btns .btn").forEach((b) => b.addEventListener("click", () => startTyping(b.dataset.mode)));
+    document.getElementById("mtnBtn").addEventListener("click", () => { showView("modeView"); beep(523, 0.08); });
+    document.getElementById("modeBack").addEventListener("click", () => showView("clockView"));
+    document.querySelectorAll("#modeView .btn").forEach((b) => b.addEventListener("click", () => startTyping(b.dataset.mode)));
     document.getElementById("tQuit").addEventListener("click", () => { if (T) clearInterval(T.timerId); showView("clockView"); });
     document.getElementById("rRetry").addEventListener("click", () => startTyping(T.mode));
-    document.getElementById("rSelect").addEventListener("click", () => showView("selectView"));
+    document.getElementById("rMode").addEventListener("click", () => showView("modeView"));
     document.getElementById("rHome").addEventListener("click", () => showView("clockView"));
 
-    /* ============================================================
-       埋め込み幅にぴったり収める（表示中ビューを等倍スケール）
-       ============================================================ */
+    /* ---------- 埋め込み幅にぴったり収める ---------- */
     const fitBox = document.getElementById("fit");
-    const stage  = document.getElementById("stage");
+    const stage = document.getElementById("stage");
     function applyFit() {
       stage.style.transform = "none";
       const w = stage.offsetWidth, h = stage.offsetHeight;
@@ -693,6 +448,7 @@
       fitBox.style.width = w * scale + "px";
       fitBox.style.height = h * scale + "px";
     }
+    window.applyFit = applyFit;
     window.addEventListener("resize", applyFit);
     window.addEventListener("load", applyFit);
 
