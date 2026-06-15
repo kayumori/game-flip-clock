@@ -140,6 +140,13 @@
   .trank { font-size: 13px; letter-spacing: 1px; color: var(--sub); }
   .trank b { color: var(--ink); font-size: 18px; }
   .trank #tRank { color: var(--ink); font-weight: 700; }
+  #typeView { position: relative; }
+  .countdown {
+    position: absolute; inset: 0; display: none; place-items: center; z-index: 40;
+    background: rgba(255,255,255,.85); font-size: 96px; font-weight: 700; letter-spacing: 2px; color: var(--ink);
+  }
+  .countdown.pop { animation: cdPop .45s ease; }
+  @keyframes cdPop { 0% { transform: scale(.4); opacity: 0; } 45% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
 
   .tja { font-size: 24px; font-weight: 700; letter-spacing: 4px; color: var(--ink); text-align: center; max-width: 92vw; }
 
@@ -237,12 +244,13 @@
       <div class="tja" id="tJa">ready</div>
       <div class="lrow" id="lrow"></div>
       <div class="trank"><b id="tAlt">0</b>m ・ <span id="tRank">ふもと</span></div>
+      <div class="countdown" id="countdown"></div>
       <div class="ascent">
         <div class="ascent__track">
           <div class="ascent__fill" id="ascentFill"></div>
           <div class="ascent__marker" id="marker">▲</div>
         </div>
-        <div class="ascent__labels"><span id="ascL">ふもと</span><span id="ascR">日和山 3m</span></div>
+        <div class="ascent__labels"><span id="ascL">ふもと</span><span id="ascR">笠山 100m</span></div>
       </div>
       <input class="hidden-input" id="tInput" inputmode="latin" autocomplete="off" autocapitalize="none" aria-hidden="true" />
     </section>
@@ -289,12 +297,17 @@
       const ts = card.querySelector(".top span"), bs = card.querySelector(".bottom span");
       const cur = ts.textContent;
       if (cur === next) return;
+      // 前回の途中アニメが残っていたら掃除（タブ非アクティブ等でanimationend未発火だった場合の対策）
+      card.querySelectorAll(".flip-top, .flip-bottom").forEach((e) => e.remove());
       ts.textContent = next; bs.textContent = cur;
       const ft = document.createElement("div"); ft.className = "flip-top"; ft.innerHTML = "<span>" + cur + "</span>";
       const fb = document.createElement("div"); fb.className = "flip-bottom"; fb.innerHTML = "<span>" + next + "</span>";
       card.append(ft, fb);
-      ft.addEventListener("animationend", () => ft.remove());
-      fb.addEventListener("animationend", () => { bs.textContent = next; fb.remove(); });
+      let done = false;
+      const finish = () => { if (done) return; done = true; bs.textContent = next; ft.remove(); fb.remove(); };
+      fb.addEventListener("animationend", finish);
+      // animationend が来なくても必ず確定させる保険
+      setTimeout(finish, 750);
     }
     const setCard = (p, ch) => cards[p] && flip(cards[p], ch);
     function render() {
@@ -312,21 +325,22 @@
        タイピング登山
        ============================================================ */
     const MODES = { easy: { time: 45 }, normal: { time: 60 }, hard: { time: 90 } };
+    // ※ローマ字は「キーボード入力準拠」：ん = nn、っ = 次の子音を重ねる
     const WORDS = {
       easy: [
         {ja:"すし",ro:"sushi"},{ja:"ねこ",ro:"neko"},{ja:"いぬ",ro:"inu"},{ja:"やま",ro:"yama"},
         {ja:"うみ",ro:"umi"},{ja:"そら",ro:"sora"},{ja:"はな",ro:"hana"},{ja:"ほし",ro:"hoshi"},
         {ja:"つき",ro:"tsuki"},{ja:"みず",ro:"mizu"},{ja:"あめ",ro:"ame"},{ja:"ゆき",ro:"yuki"},
         {ja:"とり",ro:"tori"},{ja:"くも",ro:"kumo"},{ja:"かさ",ro:"kasa"},{ja:"ふね",ro:"fune"},
-        {ja:"たまご",ro:"tamago"},{ja:"りんご",ro:"ringo"},{ja:"くるま",ro:"kuruma"},{ja:"えき",ro:"eki"},
+        {ja:"たまご",ro:"tamago"},{ja:"りんご",ro:"rinngo"},{ja:"くるま",ro:"kuruma"},{ja:"えき",ro:"eki"},
       ],
       normal: [
-        {ja:"ともだち",ro:"tomodachi"},{ja:"がっこう",ro:"gakkou"},{ja:"でんしゃ",ro:"densha"},
-        {ja:"さくら",ro:"sakura"},{ja:"おんがく",ro:"ongaku"},{ja:"たべもの",ro:"tabemono"},
-        {ja:"てんき",ro:"tenki"},{ja:"かばん",ro:"kaban"},{ja:"えんぴつ",ro:"enpitsu"},
-        {ja:"としょかん",ro:"toshokan"},{ja:"みかん",ro:"mikan"},{ja:"ひこうき",ro:"hikouki"},
-        {ja:"せんせい",ro:"sensei"},{ja:"あさごはん",ro:"asagohan"},{ja:"でんわ",ro:"denwa"},
-        {ja:"しんぶん",ro:"shinbun"},{ja:"やさい",ro:"yasai"},{ja:"おかし",ro:"okashi"},
+        {ja:"ともだち",ro:"tomodachi"},{ja:"がっこう",ro:"gakkou"},{ja:"でんしゃ",ro:"dennsha"},
+        {ja:"さくら",ro:"sakura"},{ja:"おんがく",ro:"onngaku"},{ja:"たべもの",ro:"tabemono"},
+        {ja:"てんき",ro:"tennki"},{ja:"かばん",ro:"kabann"},{ja:"えんぴつ",ro:"ennpitsu"},
+        {ja:"としょかん",ro:"toshokann"},{ja:"みかん",ro:"mikann"},{ja:"ひこうき",ro:"hikouki"},
+        {ja:"せんせい",ro:"sennsei"},{ja:"あさごはん",ro:"asagohann"},{ja:"でんわ",ro:"dennwa"},
+        {ja:"しんぶん",ro:"shinnbunn"},{ja:"やさい",ro:"yasai"},{ja:"おかし",ro:"okashi"},
       ],
       // ことわざ・早口言葉（打ちづらい長文）
       hard: [
@@ -335,33 +349,31 @@
         {ja:"あかまきがみあおまきがみ",ro:"akamakigamiaomakigami"},
         {ja:"となりのきゃくはよくかきくうきゃくだ",ro:"tonarinokyakuhayokukakikuukyakuda"},
         {ja:"ちりもつもればやまとなる",ro:"chirimotsumorebayamatonaru"},
-        {ja:"いしのうえにもさんねん",ro:"ishinouenimosannen"},
+        {ja:"いしのうえにもさんねん",ro:"ishinouenimosannnenn"},
         {ja:"さるもきからおちる",ro:"sarumokikaraochiru"},
-        {ja:"ななころびやおき",ro:"nanakorobiyaoki"},
-        {ja:"とらぬたぬきのかわざんよう",ro:"toranutanukinokawazanyou"},
+        {ja:"とらぬたぬきのかわざんよう",ro:"toranutanukinokawazannyou"},
         {ja:"のうあるたかはつめをかくす",ro:"nouarutakahatsumewokakusu"},
         {ja:"いそがばまわれ",ro:"isogabamaware"},
-        {ja:"ねこにこばん",ro:"nekonikoban"},
+        {ja:"ねこにこばん",ro:"nekonikobann"},
+        {ja:"じてんしゃ",ro:"jitennsha"},
       ],
     };
-    // スペル1文字 = 1m 登る。実在の山（低山中心・約30種）を高さ順に
+    // スペル1文字 = 1m 登る。実在の山を高さ順に（ほどよく間隔をあけて）
     const RANKS = [
       { m: 0,    name: "ふもと" },
-      { m: 3,    name: "日和山" },     { m: 5,    name: "天保山" },
-      { m: 6,    name: "弁天山" },     { m: 7,    name: "蘇鉄山" },
-      { m: 10,   name: "大潟富士" },   { m: 26,   name: "愛宕山" },
-      { m: 112,  name: "笠山" },       { m: 226,  name: "円山" },
-      { m: 292,  name: "屋島" },       { m: 334,  name: "函館山" },
-      { m: 342,  name: "若草山" },     { m: 422,  name: "讃岐富士" },
-      { m: 599,  name: "高尾山" },     { m: 634,  name: "弥彦山" },
-      { m: 848,  name: "比叡山" },     { m: 877,  name: "筑波山" },
-      { m: 924,  name: "開聞岳" },     { m: 931,  name: "六甲山" },
-      { m: 1117, name: "桜島" },       { m: 1212, name: "金時山" },
-      { m: 1406, name: "天城山" },     { m: 1592, name: "阿蘇山" },
-      { m: 1729, name: "大山" },       { m: 2568, name: "浅間山" },
-      { m: 3067, name: "御嶽山" },     { m: 3180, name: "槍ヶ岳" },
-      { m: 3193, name: "北岳" },       { m: 3776, name: "富士山" },
-      { m: 4810, name: "モンブラン" }, { m: 8849, name: "エベレスト" },
+      { m: 100,  name: "笠山" },
+      { m: 200,  name: "円山" },
+      { m: 300,  name: "函館山" },
+      { m: 400,  name: "讃岐富士" },
+      { m: 600,  name: "高尾山" },
+      { m: 900,  name: "筑波山" },
+      { m: 1100, name: "桜島" },
+      { m: 1400, name: "天城山" },
+      { m: 1700, name: "大山" },
+      { m: 2500, name: "浅間山" },
+      { m: 3000, name: "御嶽山" },
+      { m: 3776, name: "富士山" },
+      { m: 8849, name: "エベレスト" },
     ];
     function rankIndex(m) { let idx = 0; for (let i = 0; i < RANKS.length; i++) if (m >= RANKS[i].m) idx = i; return idx; }
     // 文字数でカードサイズを調整（長文でも収まるように）
@@ -424,16 +436,33 @@
     let T = null;
 
     function startTyping(mode) {
-      T = { mode, timeLeft: MODES[mode].time, hits: 0, miss: 0, score: 0, combo: 0, target: "", pos: 0, cards: [], timerId: null };
+      T = { mode, timeLeft: MODES[mode].time, hits: 0, miss: 0, score: 0, combo: 0, target: "", pos: 0, cards: [], timerId: null, cdId: null, ready: false };
       showView("typeView");
       nextWord(); updateTop(); updateAscent();
       try { tInput.focus(); } catch (_) {}
-      clearInterval(T.timerId);
-      T.timerId = setInterval(() => {
-        T.timeLeft--; updateTop();
-        tTime.classList.toggle("is-low", T.timeLeft <= 5);
-        if (T.timeLeft <= 0) endTyping();
-      }, 1000);
+      runCountdown(() => {
+        if (!T) return;
+        T.ready = true;
+        clearInterval(T.timerId);
+        T.timerId = setInterval(() => {
+          T.timeLeft--; updateTop();
+          tTime.classList.toggle("is-low", T.timeLeft <= 5);
+          if (T.timeLeft <= 0) endTyping();
+        }, 1000);
+      });
+    }
+    function runCountdown(cb) {
+      const cd = document.getElementById("countdown");
+      cd.style.display = "grid";
+      const show = (txt, hz) => { cd.textContent = txt; cd.classList.remove("pop"); void cd.offsetWidth; cd.classList.add("pop"); beep(hz, 0.12); };
+      let n = 3; show(n, 440);
+      const iv = setInterval(() => {
+        n--;
+        if (n > 0) show(n, 440);
+        else if (n === 0) show("START", 880);
+        else { clearInterval(iv); cd.style.display = "none"; cb(); }
+      }, 750);
+      if (T) T.cdId = iv;
     }
     function nextWord() {
       const list = WORDS[T.mode];
@@ -480,7 +509,7 @@
     }
     function flashCombo() { tCombo.classList.remove("reset"); void tCombo.offsetWidth; tCombo.classList.add("reset"); }
     function onKey(ch) {
-      if (!T) return;
+      if (!T || !T.ready) return;
       if (ch === T.target[T.pos]) {
         T.pos++; T.hits++; T.combo++;
         const mult = 1 + Math.floor((T.combo - 1) / 10); // 10連続ごとにボーナス倍率+1
@@ -521,7 +550,7 @@
     });
     typeView.addEventListener("pointerdown", () => { try { tInput.focus(); } catch (_) {} });
 
-    document.getElementById("tQuit").addEventListener("click", () => { if (T) clearInterval(T.timerId); closeModes(); showView("clockView"); });
+    document.getElementById("tQuit").addEventListener("click", () => { if (T) { clearInterval(T.timerId); clearInterval(T.cdId); } document.getElementById("countdown").style.display = "none"; T = null; closeModes(); showView("clockView"); });
     document.getElementById("rRetry").addEventListener("click", () => startTyping(T.mode));
     document.getElementById("rMode").addEventListener("click", () => { showView("clockView"); openModes(); });
     document.getElementById("rHome").addEventListener("click", () => { closeModes(); showView("clockView"); });
